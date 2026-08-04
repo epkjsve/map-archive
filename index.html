@@ -18,9 +18,16 @@
             position: absolute; top: 15px; right: 15px; z-index: 1000;
             background: white; padding: 15px; border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); border-left: 5px solid #ff6600;
+            display: flex; flex-direction: column; gap: 10px; width: 200px;
         }
 
-        #year-filter { width: 100%; padding: 5px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-group label { font-weight: bold; font-size: 13px; margin-bottom: 3px; }
+
+        #name-search, #year-filter { 
+            width: 100%; padding: 6px; border-radius: 4px; 
+            border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; 
+        }
 
         /* Koordinatvisning för admin */
         .admin-coord-display {
@@ -51,8 +58,8 @@
             background-color: #bdc3c7 !important;
             color: #7f8c8d !important;
             cursor: not-allowed !important;
-            pointer-events: none !important; /* Blockerar alla musklick */
-            user-select: none !important; /* Hindrar texten från att markeras */
+            pointer-events: none !important;
+            user-select: none !important;
             box-shadow: none !important;
         }
 
@@ -78,20 +85,12 @@
 
         /* Årtalsetikett på ensamma kartikoner */
         .ol-icon-year {
-            position: absolute;
-            top: 23px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border: 1px solid #333;
-            border-radius: 3px;
-            padding: 1px 4px;
-            font-size: 10px;
-            font-weight: bold;
-            color: #333;
-            white-space: nowrap;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.25);
-            z-index: 1000;
+            position: absolute; top: 23px; left: 50%;
+            transform: translateX(-50%); background: white;
+            border: 1px solid #333; border-radius: 3px;
+            padding: 1px 4px; font-size: 10px; font-weight: bold;
+            color: #333; white-space: nowrap;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.25); z-index: 1000;
         }
 
         /* Anpassning av kluster-cirklar */
@@ -107,10 +106,16 @@
 <body>
 
     <div id="filter-container">
-        <strong>Välj år:</strong><br>
-        <select id="year-filter" onchange="filterMarkers()">
-            <option value="all">Alla kartor</option>
-        </select>
+        <div class="filter-group">
+            <label for="name-search">Sök tävling:</label>
+            <input type="text" id="name-search" placeholder="T.ex. O-Ringen..." oninput="filterMarkers()">
+        </div>
+        <div class="filter-group">
+            <label for="year-filter">Välj år:</label>
+            <select id="year-filter" onchange="filterMarkers()">
+                <option value="all">Alla år</option>
+            </select>
+        </div>
     </div>
 
     <div id="map"></div>
@@ -124,25 +129,21 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     
     <script>
-        // Lagt till en cache-breaker dynamiskt så att ändringar i scriptet/databasen tvingas fram omedelbart
-        const csvBaseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTiIvWU6vJ_oiLei4yVUVRjROhqhDOUVxE5H796BTNBHbRRXz6tgMtL777NatJMlHkyF1oXKknvMEDk/pub?output=csv';
+        const csvBaseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRDjd0ZeXpPuXF5guwyrqy8o8QXOZVQK8tnY1juG0qeDc5sr8_l8HvAy0S2ybISA_-CW7IerhEYA7Oa/pub?output=csv';
         const csvUrl = csvBaseUrl + '&t=' + new Date().getTime();
 
         const map = L.map('map').setView([62.0, 15.0], 5);
         
-        // Skapa klustergruppen
         const markersGroup = L.markerClusterGroup({
             showCoverageOnHover: false,
             spiderfyOnMaxZoom: true,
             disableClusteringAtZoom: 17
         });
 
-        // Bakgrundskarta
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap, © CARTO'
         }).addTo(map);
 
-        // Skapar en ikon per karta, med årtal inbakat i html:en
         function createYearIcon(year) {
             return L.divIcon({
                 className: 'ol-icon',
@@ -151,17 +152,13 @@
             });
         }
 
-        // Skottsäker funktion för att identifiera giltiga länkar
         function getButtonHtml(url, label, activeClass) {
             const cleanUrl = url ? String(url).trim() : "";
-            
-            // Kontrollerar stenhårt om länken börjar med http eller https
             const hasValidUrl = cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://");
 
             if (hasValidUrl) {
                 return `<a href="${cleanUrl}" target="_blank" class="btn ${activeClass}">${label}</a>`;
             } else {
-                // Returnerar en span-tagg UTAN href eller target. Denna kan INTE öppna flikar.
                 return `<span class="btn btn-disabled">${label} (saknas)</span>`;
             }
         }
@@ -179,7 +176,7 @@
 
                     results.data.forEach(row => {
                         const item = {
-                            namn: row["Namn"],
+                            namn: row["Namn"] || "",
                             ar: row["År"],
                             arrangor: row["Arrangör"],
                             langd: row["Längd_m"],
@@ -212,6 +209,7 @@
                             
                             marker.bindPopup(popupContent, { maxWidth: 350 });
                             marker.year = String(item.ar);
+                            marker.namn = String(item.namn).toLowerCase();
                             
                             allMarkersList.push(marker);
                             markersGroup.addLayer(marker);
@@ -232,10 +230,15 @@
 
         function filterMarkers() {
             const selectedYear = document.getElementById('year-filter').value;
+            const searchText = document.getElementById('name-search').value.toLowerCase().trim();
+            
             markersGroup.clearLayers();
             
             allMarkersList.forEach(marker => {
-                if (selectedYear === "all" || marker.year === selectedYear) {
+                const matchesYear = (selectedYear === "all" || marker.year === selectedYear);
+                const matchesSearch = (searchText === "" || marker.namn.includes(searchText));
+
+                if (matchesYear && matchesSearch) {
                     markersGroup.addLayer(marker);
                 }
             });
