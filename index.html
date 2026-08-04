@@ -300,14 +300,14 @@
             }
         }
 
-        // Flexibel funktion som söker efter kolumner oavsett exakt namn eller extra tecken
+        // Exakt och säker värdehämtares
         function getValue(row, keyAliases) {
             if (!row) return "";
             for (const key of Object.keys(row)) {
                 const cleanKey = key.trim().replace(/^\uFEFF/, '').toLowerCase();
                 for (const alias of keyAliases) {
                     const cleanAlias = alias.toLowerCase();
-                    if (cleanKey === cleanAlias || cleanKey.includes(cleanAlias)) {
+                    if (cleanKey === cleanAlias || cleanKey.startsWith(cleanAlias)) {
                         return row[key] !== undefined && row[key] !== null ? String(row[key]).trim() : "";
                     }
                 }
@@ -315,10 +315,26 @@
             return "";
         }
 
+        // Tolkar alla varianter av koordinater
         function parseCoord(val) {
             if (!val) return NaN;
             const clean = String(val).replace(',', '.').replace(/[^\d.-]/g, '');
             return parseFloat(clean);
+        }
+
+        // Tolkar längd/distans i både meter och kilometer
+        function parseDistance(val) {
+            if (!val) return 0;
+            const strVal = String(val).trim().toLowerCase();
+            const cleanVal = strVal.replace(',', '.').replace(/[^\d.]/g, '');
+            const num = parseFloat(cleanVal);
+            if (isNaN(num) || num <= 0) return 0;
+
+            // Om värdet innehåller 'km' eller är ett litet tal (t.ex. 6.5 istället för 6500), omvandla till meter
+            if (strVal.includes('km') || num < 50) {
+                return Math.round(num * 1000);
+            }
+            return Math.round(num);
         }
 
         let allMarkersList = [];
@@ -342,7 +358,11 @@
                         const rawYear = getValue(row, ["år", "ar", "year", "datum", "date"]);
                         const ar = parseInt(rawYear, 10);
                         const arrangor = getValue(row, ["arrangör", "arrangor", "klubb", "club", "organizer"]);
-                        const rawLangd = getValue(row, ["längd", "langd", "distans", "distance", "m"]);
+                        
+                        // Längdkolumner sökta med precision
+                        const rawLangd = getValue(row, ["längd_m", "längd", "langd", "distans", "banlängd", "distance", "length"]);
+                        const langd = parseDistance(rawLangd);
+                        
                         const tid = getValue(row, ["tid", "time"]);
                         const rawLat = getValue(row, ["latitud", "lat", "latitude", "y"]);
                         const rawLng = getValue(row, ["longitud", "long", "lng", "longitude", "x"]);
@@ -353,11 +373,6 @@
 
                         const lat = parseCoord(rawLat);
                         const lng = parseCoord(rawLng);
-                        
-                        const cleanLangdStr = rawLangd.replace(',', '.').replace(/[^\d.]/g, '');
-                        const langdNum = parseFloat(cleanLangdStr);
-                        const langd = !isNaN(langdNum) ? langdNum : 0;
-
                         const displayYear = !isNaN(ar) ? ar : "";
 
                         const item = {
@@ -371,7 +386,7 @@
                                 <div class="ol-popup">
                                     <h3>${namn}</h3>
                                     <p class="meta">
-                                        <strong>${displayYear}</strong> | ${arrangor} | ${langd > 0 ? langd + 'm' : ''} ${tid ? '| ' + tid : ''}
+                                        <strong>${displayYear}</strong> | ${arrangor} | ${langd > 0 ? (langd >= 1000 ? (langd/1000).toFixed(2) + ' km' : langd + ' m') : ''} ${tid ? '| ' + tid : ''}
                                     </p>
                                     <div class="btn-group">
                                         ${getButtonHtml(pdf, 'Karta (PDF)', 'btn-pdf')}
