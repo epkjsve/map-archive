@@ -216,7 +216,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
@@ -268,6 +268,20 @@
             }
         }
 
+        // Hjälpfunktion för att hämta värden oavsett teckenkodning/mellanslag i kolumnnamn
+        function getValue(row, keyAliases) {
+            if (!row) return "";
+            for (const key of Object.keys(row)) {
+                const cleanKey = key.trim().replace(/^\uFEFF/, '');
+                for (const alias of keyAliases) {
+                    if (cleanKey.toLowerCase() === alias.toLowerCase()) {
+                        return row[key] !== undefined && row[key] !== null ? String(row[key]).trim() : "";
+                    }
+                }
+            }
+            return "";
+        }
+
         let allMarkersList = [];
         let allParsedData = [];
         let racesChartInstance = null;
@@ -285,49 +299,59 @@
                     const organizersFound = new Set();
 
                     results.data.forEach(row => {
-                        const lengthVal = parseFloat(String(row["Längd_m"]).replace(',', '.').replace(/\s/g, ''));
+                        const namn = getValue(row, ["Namn", "Tävling"]);
+                        const rawYear = getValue(row, ["År", "Ar", "Year"]);
+                        const ar = parseInt(rawYear, 10);
+                        const arrangor = getValue(row, ["Arrangör", "Arrangor", "Klubb"]);
+                        const rawLangd = getValue(row, ["Längd_m", "Längd", "Langd", "Längd (m)"]);
+                        const tid = getValue(row, ["Tid"]);
+                        const rawLat = getValue(row, ["Latitud", "Lat"]);
+                        const rawLng = getValue(row, ["Longitud", "Long", "Lng"]);
+                        const referat = getValue(row, ["Referat"]) || "Inget referat skrivet.";
+                        const pdf = getValue(row, ["PDF_URL", "PDF"]);
+                        const winsplits = getValue(row, ["Splits_URL", "Splits"]);
+                        const livelox = getValue(row, ["Route_URL", "Livelox"]);
+
+                        const lat = parseFloat(rawLat.replace(',', '.'));
+                        const lng = parseFloat(rawLng.replace(',', '.'));
+                        
+                        // Rensa längd-sträng så att vi får rena siffror
+                        const cleanLangdStr = rawLangd.replace(',', '.').replace(/[^\d.]/g, '');
+                        const langdNum = parseFloat(cleanLangdStr);
+                        const langd = !isNaN(langdNum) ? langdNum : 0;
+
                         const item = {
-                            namn: row["Namn"] || "",
-                            ar: parseInt(row["År"], 10),
-                            arrangor: row["Arrangör"] || "",
-                            langd: !isNaN(lengthVal) ? lengthVal : 0,
-                            tid: row["Tid"] || "",
-                            lat: parseFloat(String(row["Latitud"]).replace(',', '.')),
-                            lng: parseFloat(String(row["Longitud"]).replace(',', '.')),
-                            referat: row["Referat"] || "Inget referat skrivet.",
-                            pdf: row["PDF_URL"],
-                            winsplits: row["Splits_URL"],
-                            livelox: row["Route_URL"]
+                            namn, ar, arrangor, langd, tid, lat, lng, referat, pdf, winsplits, livelox
                         };
 
-                        if (!isNaN(item.lat) && !isNaN(item.lng)) {
-                            const marker = L.marker([item.lat, item.lng], { icon: createYearIcon(item.ar) });
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const marker = L.marker([lat, lng], { icon: createYearIcon(ar) });
                             
                             const popupContent = `
                                 <div class="ol-popup">
-                                    <h3>${item.namn}</h3>
+                                    <h3>${namn}</h3>
                                     <p class="meta">
-                                        <strong>${item.ar || ''}</strong> | ${item.arrangor} | ${item.langd}m ${item.tid ? '| ' + item.tid : ''}
+                                        <strong>${ar || ''}</strong> | ${arrangor} | ${langd > 0 ? langd + 'm' : ''} ${tid ? '| ' + tid : ''}
                                     </p>
                                     <div class="btn-group">
-                                        ${getButtonHtml(item.pdf, 'Karta (PDF)', 'btn-pdf')}
-                                        ${getButtonHtml(item.winsplits, 'Split Times', 'btn-winsplits')}
-                                        ${getButtonHtml(item.livelox, 'Route', 'btn-livelox')}
+                                        ${getButtonHtml(pdf, 'Karta (PDF)', 'btn-pdf')}
+                                        ${getButtonHtml(winsplits, 'Split Times', 'btn-winsplits')}
+                                        ${getButtonHtml(livelox, 'Route', 'btn-livelox')}
                                     </div>
-                                    <div class="referat-box">${item.referat}</div>
+                                    <div class="referat-box">${referat}</div>
                                 </div>
                             `;
                             
                             marker.bindPopup(popupContent, { maxWidth: 350 });
-                            marker.year = String(item.ar);
-                            marker.arrangor = String(item.arrangor);
-                            marker.namn = String(item.namn).toLowerCase();
+                            marker.year = String(ar);
+                            marker.arrangor = String(arrangor);
+                            marker.namn = String(namn).toLowerCase();
                             
                             allMarkersList.push(marker);
                             allParsedData.push(item);
 
-                            if(item.ar && !isNaN(item.ar)) yearsFound.add(item.ar);
-                            if(item.arrangor.trim()) organizersFound.add(item.arrangor.trim());
+                            if(ar && !isNaN(ar)) yearsFound.add(ar);
+                            if(arrangor) organizersFound.add(arrangor);
                         }
                     });
 
