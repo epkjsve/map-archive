@@ -286,25 +286,21 @@
                         }
                     });
 
-                    // Sortera alla unika år
                     sortedYearsList = Array.from(yearsFound).sort((a, b) => a - b);
 
-                    // Konfigurera tidslinjeslider
                     if (sortedYearsList.length > 0) {
                         const slider = document.getElementById('timeline-slider');
                         slider.min = 0;
-                        slider.max = sortedYearsList.length; // Max = Sista året + 1 ("Alla år")
+                        slider.max = sortedYearsList.length;
                         slider.value = sortedYearsList.length;
                     }
 
-                    // Fyll på årsmeny
                     [...sortedYearsList].reverse().forEach(year => {
                         const opt = document.createElement('option');
                         opt.value = year; opt.innerHTML = year;
                         yearFilterMenu.appendChild(opt);
                     });
 
-                    // Fyll på arrangörsmeny
                     Array.from(organizersFound).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
                         const opt = document.createElement('option');
                         opt.value = org; opt.innerHTML = org;
@@ -340,14 +336,14 @@
 
             if (visibleCount > 0 && autoZoom) {
                 map.fitBounds(markersGroup.getBounds(), {
-                    padding: [50, 50],
-                    maxZoom: 15,
-                    animate: true
+                    padding: [60, 60],
+                    maxZoom: 13,
+                    animate: true,
+                    duration: 0.8
                 });
             }
         }
 
-        // Tidslinjelogik
         function onSliderChange() {
             const slider = document.getElementById('timeline-slider');
             const val = parseInt(slider.value, 10);
@@ -363,7 +359,7 @@
                 yearLabel.textContent = year;
             }
 
-            filterMarkers(false); // Inget ryckigt zoomande under uppspelning
+            filterMarkers(true);
         }
 
         function syncTimelineFromDropdown() {
@@ -385,7 +381,6 @@
         }
 
         function togglePlayPause() {
-            const btn = document.getElementById('play-btn');
             if (isPlaying) {
                 stopPlayback();
             } else {
@@ -396,7 +391,7 @@
         function startPlayback() {
             const slider = document.getElementById('timeline-slider');
             if (parseInt(slider.value, 10) >= sortedYearsList.length) {
-                slider.value = 0; // Börja om från första året
+                slider.value = 0;
             }
             isPlaying = true;
             document.getElementById('play-btn').innerHTML = '⏸';
@@ -409,11 +404,11 @@
                     slider.value = currentVal + 1;
                     onSliderChange();
                 } else {
-                    slider.value = sortedYearsList.length; // Avsluta med alla år
+                    slider.value = sortedYearsList.length;
                     onSliderChange();
                     stopPlayback();
                 }
-            }, 1200); // Byter år var 1.2:e sekund
+            }, 1800);
         }
 
         function stopPlayback() {
