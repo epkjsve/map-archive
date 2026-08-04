@@ -43,7 +43,7 @@
             position: absolute; bottom: 25px; left: 20px;
             background: rgba(255, 255, 255, 0.95); padding: 12px; z-index: 1000;
             border: 2px solid #ff6600; border-radius: 8px; font-size: 13px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); min-width: 200px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); min-width: 210px;
         }
 
         .coord-row {
@@ -319,11 +319,18 @@
         /* --- Admin-verktyg för koordinater --- */
         let adminMarker = null;
 
+        function clearAdminMarker() {
+            if (adminMarker) {
+                map.removeLayer(adminMarker);
+                adminMarker = null;
+            }
+            document.getElementById('coords').innerHTML = 'Klicka på kartan för koordinater';
+        }
+
         map.on('click', function(e) {
             const lat = e.latlng.lat.toFixed(6);
             const lng = e.latlng.lng.toFixed(6);
 
-            // Skapa eller flytta en tydlig cirkelmarkör på kartan
             if (adminMarker) {
                 adminMarker.setLatLng(e.latlng);
             } else {
@@ -337,7 +344,10 @@
             }
 
             document.getElementById('coords').innerHTML = `
-                <strong>Admin-koordinater:</strong>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <strong>Admin-koordinater:</strong>
+                    <button class="coord-btn" onclick="clearAdminMarker()" style="color: #c0392b; font-weight: bold;">✕ Rensa</button>
+                </div>
                 <div class="coord-row">
                     <span>Lat: <code>${lat}</code></span>
                     <button class="coord-btn" onclick="navigator.clipboard.writeText('${lat}'); this.innerText='Kopierat!';">Kopiera Lat</button>
