@@ -69,6 +69,19 @@
             gap: 15px; margin-bottom: 25px; margin-top: 15px;
         }
 
+        .records-section {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; margin-bottom: 25px;
+        }
+
+        .record-card {
+            background: #f4f9f5; border: 1px solid #d2e7d6; border-radius: 8px;
+            padding: 15px; text-align: center;
+        }
+        .record-card h4 { margin: 0; font-size: 12px; color: #2e7d32; text-transform: uppercase; }
+        .record-card .value { font-size: 20px; font-weight: bold; color: #1b5e20; margin-top: 5px; }
+        .record-card .subtext { font-size: 11px; color: #555; margin-top: 4px; word-break: break-word; }
+
         .stat-card {
             background: #fdf6f2; border: 1px solid #f0e0d5; border-radius: 8px;
             padding: 15px; text-align: center;
@@ -196,6 +209,25 @@
                 </div>
             </div>
 
+            <h3>🏆 Personliga Rekord</h3>
+            <div class="records-section">
+                <div class="record-card">
+                    <h4>Längsta Lopp</h4>
+                    <div class="value" id="rec-longest-dist">0 km</div>
+                    <div class="subtext" id="rec-longest-name">-</div>
+                </div>
+                <div class="record-card">
+                    <h4>Mesta Tävlingar / År</h4>
+                    <div class="value" id="rec-most-races-count">0</div>
+                    <div class="subtext" id="rec-most-races-year">-</div>
+                </div>
+                <div class="record-card">
+                    <h4>Mesta Sträcka / År</h4>
+                    <div class="value" id="rec-most-dist-km">0 km</div>
+                    <div class="subtext" id="rec-most-dist-year">-</div>
+                </div>
+            </div>
+
             <h3>Tävlingar per år</h3>
             <div class="chart-container">
                 <canvas id="racesChart"></canvas>
@@ -216,7 +248,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
@@ -268,17 +300,25 @@
             }
         }
 
+        // Flexibel funktion som söker efter kolumner oavsett exakt namn eller extra tecken
         function getValue(row, keyAliases) {
             if (!row) return "";
             for (const key of Object.keys(row)) {
-                const cleanKey = key.trim().replace(/^\uFEFF/, '');
+                const cleanKey = key.trim().replace(/^\uFEFF/, '').toLowerCase();
                 for (const alias of keyAliases) {
-                    if (cleanKey.toLowerCase() === alias.toLowerCase()) {
+                    const cleanAlias = alias.toLowerCase();
+                    if (cleanKey === cleanAlias || cleanKey.includes(cleanAlias)) {
                         return row[key] !== undefined && row[key] !== null ? String(row[key]).trim() : "";
                     }
                 }
             }
             return "";
+        }
+
+        function parseCoord(val) {
+            if (!val) return NaN;
+            const clean = String(val).replace(',', '.').replace(/[^\d.-]/g, '');
+            return parseFloat(clean);
         }
 
         let allMarkersList = [];
@@ -298,38 +338,40 @@
                     const organizersFound = new Set();
 
                     results.data.forEach(row => {
-                        const namn = getValue(row, ["Namn", "Tävling"]);
-                        const rawYear = getValue(row, ["År", "Ar", "Year"]);
+                        const namn = getValue(row, ["namn", "tävling", "tavling", "race", "name"]);
+                        const rawYear = getValue(row, ["år", "ar", "year", "datum", "date"]);
                         const ar = parseInt(rawYear, 10);
-                        const arrangor = getValue(row, ["Arrangör", "Arrangor", "Klubb"]);
-                        const rawLangd = getValue(row, ["Längd_m", "Längd", "Langd", "Längd (m)"]);
-                        const tid = getValue(row, ["Tid"]);
-                        const rawLat = getValue(row, ["Latitud", "Lat"]);
-                        const rawLng = getValue(row, ["Longitud", "Long", "Lng"]);
-                        const referat = getValue(row, ["Referat"]) || "Inget referat skrivet.";
-                        const pdf = getValue(row, ["PDF_URL", "PDF"]);
-                        const winsplits = getValue(row, ["Splits_URL", "Splits"]);
-                        const livelox = getValue(row, ["Route_URL", "Livelox"]);
+                        const arrangor = getValue(row, ["arrangör", "arrangor", "klubb", "club", "organizer"]);
+                        const rawLangd = getValue(row, ["längd", "langd", "distans", "distance", "m"]);
+                        const tid = getValue(row, ["tid", "time"]);
+                        const rawLat = getValue(row, ["latitud", "lat", "latitude", "y"]);
+                        const rawLng = getValue(row, ["longitud", "long", "lng", "longitude", "x"]);
+                        const referat = getValue(row, ["referat", "kommentar", "notering"]) || "Inget referat skrivet.";
+                        const pdf = getValue(row, ["pdf_url", "pdf", "karta", "map"]);
+                        const winsplits = getValue(row, ["splits_url", "splits", "winsplits"]);
+                        const livelox = getValue(row, ["route_url", "livelox", "route"]);
 
-                        const lat = parseFloat(rawLat.replace(',', '.'));
-                        const lng = parseFloat(rawLng.replace(',', '.'));
+                        const lat = parseCoord(rawLat);
+                        const lng = parseCoord(rawLng);
                         
                         const cleanLangdStr = rawLangd.replace(',', '.').replace(/[^\d.]/g, '');
                         const langdNum = parseFloat(cleanLangdStr);
                         const langd = !isNaN(langdNum) ? langdNum : 0;
 
+                        const displayYear = !isNaN(ar) ? ar : "";
+
                         const item = {
-                            namn, ar, arrangor, langd, tid, lat, lng, referat, pdf, winsplits, livelox
+                            namn, ar: displayYear, arrangor, langd, tid, lat, lng, referat, pdf, winsplits, livelox
                         };
 
                         if (!isNaN(lat) && !isNaN(lng)) {
-                            const marker = L.marker([lat, lng], { icon: createYearIcon(ar) });
+                            const marker = L.marker([lat, lng], { icon: createYearIcon(displayYear) });
                             
                             const popupContent = `
                                 <div class="ol-popup">
                                     <h3>${namn}</h3>
                                     <p class="meta">
-                                        <strong>${ar || ''}</strong> | ${arrangor} | ${langd > 0 ? langd + 'm' : ''} ${tid ? '| ' + tid : ''}
+                                        <strong>${displayYear}</strong> | ${arrangor} | ${langd > 0 ? langd + 'm' : ''} ${tid ? '| ' + tid : ''}
                                     </p>
                                     <div class="btn-group">
                                         ${getButtonHtml(pdf, 'Karta (PDF)', 'btn-pdf')}
@@ -341,14 +383,14 @@
                             `;
                             
                             marker.bindPopup(popupContent, { maxWidth: 350 });
-                            marker.year = String(ar);
+                            marker.year = String(displayYear);
                             marker.arrangor = String(arrangor);
                             marker.namn = String(namn).toLowerCase();
                             marker.itemData = item;
                             
                             allMarkersList.push(marker);
 
-                            if(ar && !isNaN(ar)) yearsFound.add(ar);
+                            if(displayYear) yearsFound.add(displayYear);
                             if(arrangor) organizersFound.add(arrangor);
                         }
                     });
@@ -405,7 +447,6 @@
                 });
             }
 
-            // Uppdatera statistiken i bakgrunden om modalen är öppen
             if (document.getElementById('stats-modal').style.display === 'flex') {
                 calculateAndRenderStats();
             }
@@ -426,6 +467,8 @@
             let totalDistMeters = 0;
             let totalRacesWithDist = 0;
 
+            let longestRace = { dist: 0, name: "-", year: "" };
+
             filteredParsedData.forEach(item => {
                 const year = item.ar;
                 if (!year || isNaN(year)) return;
@@ -439,6 +482,10 @@
                     yearlyData[year].distance += item.langd;
                     totalDistMeters += item.langd;
                     totalRacesWithDist += 1;
+
+                    if (item.langd > longestRace.dist) {
+                        longestRace = { dist: item.langd, name: item.namn, year: item.ar };
+                    }
                 }
             });
 
@@ -446,13 +493,37 @@
             const raceCounts = sortedYears.map(y => yearlyData[y].count);
             const distancesKm = sortedYears.map(y => (yearlyData[y].distance / 1000).toFixed(1));
 
+            // Rekordberäkningar
+            let maxRacesInYear = { count: 0, year: "-" };
+            let maxDistInYear = { dist: 0, year: "-" };
+
+            sortedYears.forEach(y => {
+                if (yearlyData[y].count > maxRacesInYear.count) {
+                    maxRacesInYear = { count: yearlyData[y].count, year: y };
+                }
+                if (yearlyData[y].distance > maxDistInYear.dist) {
+                    maxDistInYear = { dist: yearlyData[y].distance, year: y };
+                }
+            });
+
             const totalRaces = filteredParsedData.length;
             const totalKm = (totalDistMeters / 1000).toFixed(1);
             const avgKm = totalRacesWithDist > 0 ? (totalDistMeters / totalRacesWithDist / 1000).toFixed(1) : 0;
 
+            // Uppdatera summering
             document.getElementById('stat-total-races').textContent = totalRaces;
             document.getElementById('stat-total-dist').textContent = totalKm + ' km';
             document.getElementById('stat-avg-dist').textContent = avgKm + ' km';
+
+            // Uppdatera rekord
+            document.getElementById('rec-longest-dist').textContent = longestRace.dist > 0 ? (longestRace.dist / 1000).toFixed(2) + ' km' : '0 km';
+            document.getElementById('rec-longest-name').textContent = longestRace.dist > 0 ? `${longestRace.name} (${longestRace.year})` : '-';
+
+            document.getElementById('rec-most-races-count').textContent = maxRacesInYear.count > 0 ? maxRacesInYear.count + ' tävlingar' : '0';
+            document.getElementById('rec-most-races-year').textContent = maxRacesInYear.count > 0 ? `År ${maxRacesInYear.year}` : '-';
+
+            document.getElementById('rec-most-dist-km').textContent = maxDistInYear.dist > 0 ? (maxDistInYear.dist / 1000).toFixed(1) + ' km' : '0 km';
+            document.getElementById('rec-most-dist-year').textContent = maxDistInYear.dist > 0 ? `År ${maxDistInYear.year}` : '-';
 
             renderCharts(sortedYears, raceCounts, distancesKm);
         }
