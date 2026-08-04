@@ -148,15 +148,36 @@
 
         const map = L.map('map').setView([62.0, 15.0], 5);
         
+        // Definerar bakgrundskartor
+        const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap, © CARTO'
+        });
+
+        const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap-bidragsgivare'
+        });
+
+        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
+        // Sätter CARTO som standardkarta
+        cartoLight.addTo(map);
+
+        // Skapar lagerkontroll
+        const baseMaps = {
+            "Ljus karta": cartoLight,
+            "Gatukarta": osmStandard,
+            "Satellit": esriSatellite
+        };
+
+        L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
+
         const markersGroup = L.markerClusterGroup({
             showCoverageOnHover: false,
             spiderfyOnMaxZoom: true,
             disableClusteringAtZoom: 17
         });
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap, © CARTO'
-        }).addTo(map);
 
         function createYearIcon(year) {
             return L.divIcon({
@@ -234,14 +255,12 @@
                         }
                     });
 
-                    // Fyll på årsmenyn (sorterad fallande)
                     Array.from(yearsFound).sort((a, b) => b - a).forEach(year => {
                         const opt = document.createElement('option');
                         opt.value = year; opt.innerHTML = year;
                         yearFilterMenu.appendChild(opt);
                     });
 
-                    // Fyll på arrangörsmenyn (sorterad alfabetiskt)
                     Array.from(organizersFound).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
                         const opt = document.createElement('option');
                         opt.value = org; opt.innerHTML = org;
@@ -274,6 +293,14 @@
             });
 
             document.getElementById('count-number').textContent = visibleCount;
+
+            if (visibleCount > 0) {
+                map.fitBounds(markersGroup.getBounds(), {
+                    padding: [50, 50],
+                    maxZoom: 15,
+                    animate: true
+                });
+            }
         }
 
         map.on('click', function(e) {
