@@ -216,7 +216,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
@@ -268,7 +268,6 @@
             }
         }
 
-        // Hjälpfunktion för att hämta värden oavsett teckenkodning/mellanslag i kolumnnamn
         function getValue(row, keyAliases) {
             if (!row) return "";
             for (const key of Object.keys(row)) {
@@ -283,7 +282,7 @@
         }
 
         let allMarkersList = [];
-        let allParsedData = [];
+        let filteredParsedData = [];
         let racesChartInstance = null;
         let distanceChartInstance = null;
 
@@ -315,7 +314,6 @@
                         const lat = parseFloat(rawLat.replace(',', '.'));
                         const lng = parseFloat(rawLng.replace(',', '.'));
                         
-                        // Rensa längd-sträng så att vi får rena siffror
                         const cleanLangdStr = rawLangd.replace(',', '.').replace(/[^\d.]/g, '');
                         const langdNum = parseFloat(cleanLangdStr);
                         const langd = !isNaN(langdNum) ? langdNum : 0;
@@ -346,9 +344,9 @@
                             marker.year = String(ar);
                             marker.arrangor = String(arrangor);
                             marker.namn = String(namn).toLowerCase();
+                            marker.itemData = item;
                             
                             allMarkersList.push(marker);
-                            allParsedData.push(item);
 
                             if(ar && !isNaN(ar)) yearsFound.add(ar);
                             if(arrangor) organizersFound.add(arrangor);
@@ -381,6 +379,7 @@
             const searchText = document.getElementById('name-search').value.toLowerCase().trim();
             
             markersGroup.clearLayers();
+            filteredParsedData = [];
             let visibleCount = 0;
             
             allMarkersList.forEach(marker => {
@@ -390,6 +389,7 @@
 
                 if (matchesYear && matchesOrganizer && matchesSearch) {
                     markersGroup.addLayer(marker);
+                    filteredParsedData.push(marker.itemData);
                     visibleCount++;
                 }
             });
@@ -403,6 +403,11 @@
                     animate: true,
                     duration: 0.8
                 });
+            }
+
+            // Uppdatera statistiken i bakgrunden om modalen är öppen
+            if (document.getElementById('stats-modal').style.display === 'flex') {
+                calculateAndRenderStats();
             }
         }
 
@@ -421,7 +426,7 @@
             let totalDistMeters = 0;
             let totalRacesWithDist = 0;
 
-            allParsedData.forEach(item => {
+            filteredParsedData.forEach(item => {
                 const year = item.ar;
                 if (!year || isNaN(year)) return;
 
@@ -441,7 +446,7 @@
             const raceCounts = sortedYears.map(y => yearlyData[y].count);
             const distancesKm = sortedYears.map(y => (yearlyData[y].distance / 1000).toFixed(1));
 
-            const totalRaces = allParsedData.length;
+            const totalRaces = filteredParsedData.length;
             const totalKm = (totalDistMeters / 1000).toFixed(1);
             const avgKm = totalRacesWithDist > 0 ? (totalDistMeters / totalRacesWithDist / 1000).toFixed(1) : 0;
 
