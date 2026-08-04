@@ -62,7 +62,6 @@
         .btn-livelox { background-color: #2ecc71; }
         .btn:hover { filter: brightness(90%); }
 
-        /* Styling för knappar utan länk */
         .btn-disabled {
             background-color: #bdc3c7 !important;
             color: #7f8c8d !important;
@@ -79,9 +78,7 @@
         }
 
         .ol-icon {
-            background: transparent !important;
-            border: none !important;
-            overflow: visible !important;
+            background: transparent !important; border: none !important; overflow: visible !important;
         }
 
         .ol-icon-inner {
@@ -103,8 +100,11 @@
             background-color: rgba(255, 102, 0, 0.6);
         }
         .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div {
-            background-color: rgba(255, 102, 0, 0.8);
-            color: white; font-weight: bold;
+            background-color: rgba(255, 102, 0, 0.8); color: white; font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .admin-coord-display { display: none; }
         }
     </style>
 </head>
@@ -148,30 +148,23 @@
 
         const map = L.map('map').setView([62.0, 15.0], 5);
         
-        // Definerar bakgrundskartor
         const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap, © CARTO'
         });
-
         const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap-bidragsgivare'
         });
-
         const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            attribution: 'Tiles © Esri'
         });
 
-        // Sätter CARTO som standardkarta
-        cartoLight.addTo(map);
+        osmStandard.addTo(map);
 
-        // Skapar lagerkontroll
-        const baseMaps = {
-            "Ljus karta": cartoLight,
+        L.control.layers({
             "Gatukarta": osmStandard,
+            "Ljus karta": cartoLight,
             "Satellit": esriSatellite
-        };
-
-        L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
+        }, null, { position: 'topleft' }).addTo(map);
 
         const markersGroup = L.markerClusterGroup({
             showCoverageOnHover: false,
@@ -214,7 +207,7 @@
                     results.data.forEach(row => {
                         const item = {
                             namn: row["Namn"] || "",
-                            ar: row["År"],
+                            ar: parseInt(row["År"], 10),
                             arrangor: row["Arrangör"] || "",
                             langd: row["Längd_m"],
                             tid: row["Tid"] || "",
@@ -233,7 +226,7 @@
                                 <div class="ol-popup">
                                     <h3>${item.namn}</h3>
                                     <p class="meta">
-                                        <strong>${item.ar}</strong> | ${item.arrangor} | ${item.langd}m ${item.tid ? '| ' + item.tid : ''}
+                                        <strong>${item.ar || ''}</strong> | ${item.arrangor} | ${item.langd}m ${item.tid ? '| ' + item.tid : ''}
                                     </p>
                                     <div class="btn-group">
                                         ${getButtonHtml(item.pdf, 'Karta (PDF)', 'btn-pdf')}
@@ -250,12 +243,14 @@
                             marker.namn = String(item.namn).toLowerCase();
                             
                             allMarkersList.push(marker);
-                            if(item.ar) yearsFound.add(item.ar);
+                            if(item.ar && !isNaN(item.ar)) yearsFound.add(item.ar);
                             if(item.arrangor.trim()) organizersFound.add(item.arrangor.trim());
                         }
                     });
 
-                    Array.from(yearsFound).sort((a, b) => b - a).forEach(year => {
+                    const sortedYearsList = Array.from(yearsFound).sort((a, b) => b - a);
+
+                    sortedYearsList.forEach(year => {
                         const opt = document.createElement('option');
                         opt.value = year; opt.innerHTML = year;
                         yearFilterMenu.appendChild(opt);
@@ -273,7 +268,7 @@
             });
         }
 
-        function filterMarkers() {
+        function filterMarkers(autoZoom = true) {
             const selectedYear = document.getElementById('year-filter').value;
             const selectedOrganizer = document.getElementById('organizer-filter').value;
             const searchText = document.getElementById('name-search').value.toLowerCase().trim();
@@ -294,11 +289,12 @@
 
             document.getElementById('count-number').textContent = visibleCount;
 
-            if (visibleCount > 0) {
+            if (visibleCount > 0 && autoZoom) {
                 map.fitBounds(markersGroup.getBounds(), {
-                    padding: [50, 50],
-                    maxZoom: 15,
-                    animate: true
+                    padding: [60, 60],
+                    maxZoom: 13,
+                    animate: true,
+                    duration: 0.8
                 });
             }
         }
