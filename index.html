@@ -43,8 +43,19 @@
             position: absolute; bottom: 25px; left: 20px;
             background: rgba(255, 255, 255, 0.95); padding: 12px; z-index: 1000;
             border: 2px solid #ff6600; border-radius: 8px; font-size: 13px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); min-width: 200px;
         }
+
+        .coord-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 5px; font-size: 12px;
+        }
+
+        .coord-btn {
+            padding: 2px 6px; border: 1px solid #ccc; background: #f0f0f0;
+            border-radius: 3px; cursor: pointer; font-size: 11px;
+        }
+        .coord-btn:hover { background: #e0e0e0; }
 
         /* Popup styling */
         .ol-popup { min-width: 280px; }
@@ -104,7 +115,7 @@
         }
 
         @media (max-width: 600px) {
-            .admin-coord-display { display: none; }
+            .admin-coord-display { bottom: 10px; left: 10px; right: 10px; font-size: 11px; }
         }
     </style>
 </head>
@@ -191,6 +202,12 @@
             }
         }
 
+        function parseCoord(val) {
+            if (!val) return NaN;
+            const cleanStr = String(val).replace(',', '.').replace(/[^0-9.-]/g, '');
+            return parseFloat(cleanStr);
+        }
+
         let allMarkersList = [];
 
         async function loadData() {
@@ -211,8 +228,8 @@
                             arrangor: row["Arrangör"] || "",
                             langd: row["Längd_m"],
                             tid: row["Tid"] || "",
-                            lat: parseFloat(String(row["Latitud"]).replace(',', '.')),
-                            lng: parseFloat(String(row["Longitud"]).replace(',', '.')),
+                            lat: parseCoord(row["Latitud"]),
+                            lng: parseCoord(row["Longitud"]),
                             referat: row["Referat"] || "Inget referat skrivet.",
                             pdf: row["PDF_URL"],
                             winsplits: row["Splits_URL"],
@@ -299,9 +316,37 @@
             }
         }
 
+        /* --- Admin-verktyg för koordinater --- */
+        let adminMarker = null;
+
         map.on('click', function(e) {
-            document.getElementById('coords').innerHTML = 
-                `<strong>Admin-koordinater:</strong><br>Lat: ${e.latlng.lat.toFixed(6)}<br>Long: ${e.latlng.lng.toFixed(6)}`;
+            const lat = e.latlng.lat.toFixed(6);
+            const lng = e.latlng.lng.toFixed(6);
+
+            // Skapa eller flytta en tydlig cirkelmarkör på kartan
+            if (adminMarker) {
+                adminMarker.setLatLng(e.latlng);
+            } else {
+                adminMarker = L.circleMarker(e.latlng, {
+                    color: '#ff0000',
+                    fillColor: '#ff6600',
+                    fillOpacity: 0.8,
+                    radius: 8,
+                    weight: 3
+                }).addTo(map);
+            }
+
+            document.getElementById('coords').innerHTML = `
+                <strong>Admin-koordinater:</strong>
+                <div class="coord-row">
+                    <span>Lat: <code>${lat}</code></span>
+                    <button class="coord-btn" onclick="navigator.clipboard.writeText('${lat}'); this.innerText='Kopierat!';">Kopiera Lat</button>
+                </div>
+                <div class="coord-row">
+                    <span>Long: <code>${lng}</code></span>
+                    <button class="coord-btn" onclick="navigator.clipboard.writeText('${lng}'); this.innerText='Kopierat!';">Kopiera Lng</button>
+                </div>
+            `;
         });
 
         loadData();
