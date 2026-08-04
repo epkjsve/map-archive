@@ -18,13 +18,13 @@
             position: absolute; top: 15px; right: 15px; z-index: 1000;
             background: white; padding: 15px; border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); border-left: 5px solid #ff6600;
-            display: flex; flex-direction: column; gap: 10px; width: 200px;
+            display: flex; flex-direction: column; gap: 10px; width: 220px;
         }
 
         .filter-group { display: flex; flex-direction: column; }
         .filter-group label { font-weight: bold; font-size: 13px; margin-bottom: 3px; }
 
-        #name-search, #year-filter { 
+        #name-search, #year-filter, #organizer-filter { 
             width: 100%; padding: 6px; border-radius: 4px; 
             border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; 
         }
@@ -121,6 +121,12 @@
                 <option value="all">Alla år</option>
             </select>
         </div>
+        <div class="filter-group">
+            <label for="organizer-filter">Välj arrangör:</label>
+            <select id="organizer-filter" onchange="filterMarkers()">
+                <option value="all">Alla arrangörer</option>
+            </select>
+        </div>
         <div class="result-count">
             Visar <span id="count-number">0</span> kartor
         </div>
@@ -180,13 +186,15 @@
                 skipEmptyLines: true,
                 complete: function(results) {
                     const yearFilterMenu = document.getElementById('year-filter');
+                    const organizerFilterMenu = document.getElementById('organizer-filter');
                     const yearsFound = new Set();
+                    const organizersFound = new Set();
 
                     results.data.forEach(row => {
                         const item = {
                             namn: row["Namn"] || "",
                             ar: row["År"],
-                            arrangor: row["Arrangör"],
+                            arrangor: row["Arrangör"] || "",
                             langd: row["Längd_m"],
                             tid: row["Tid"] || "",
                             lat: parseFloat(String(row["Latitud"]).replace(',', '.')),
@@ -217,27 +225,38 @@
                             
                             marker.bindPopup(popupContent, { maxWidth: 350 });
                             marker.year = String(item.ar);
+                            marker.arrangor = String(item.arrangor);
                             marker.namn = String(item.namn).toLowerCase();
                             
                             allMarkersList.push(marker);
                             if(item.ar) yearsFound.add(item.ar);
+                            if(item.arrangor.trim()) organizersFound.add(item.arrangor.trim());
                         }
                     });
 
+                    // Fyll på årsmenyn (sorterad fallande)
                     Array.from(yearsFound).sort((a, b) => b - a).forEach(year => {
                         const opt = document.createElement('option');
                         opt.value = year; opt.innerHTML = year;
                         yearFilterMenu.appendChild(opt);
                     });
 
+                    // Fyll på arrangörsmenyn (sorterad alfabetiskt)
+                    Array.from(organizersFound).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
+                        const opt = document.createElement('option');
+                        opt.value = org; opt.innerHTML = org;
+                        organizerFilterMenu.appendChild(opt);
+                    });
+
                     map.addLayer(markersGroup);
-                    filterMarkers(); // Sätter inititala markörer och uppdaterar räknaren
+                    filterMarkers();
                 }
             });
         }
 
         function filterMarkers() {
             const selectedYear = document.getElementById('year-filter').value;
+            const selectedOrganizer = document.getElementById('organizer-filter').value;
             const searchText = document.getElementById('name-search').value.toLowerCase().trim();
             
             markersGroup.clearLayers();
@@ -245,9 +264,10 @@
             
             allMarkersList.forEach(marker => {
                 const matchesYear = (selectedYear === "all" || marker.year === selectedYear);
+                const matchesOrganizer = (selectedOrganizer === "all" || marker.arrangor === selectedOrganizer);
                 const matchesSearch = (searchText === "" || marker.namn.includes(searchText));
 
-                if (matchesYear && matchesSearch) {
+                if (matchesYear && matchesOrganizer && matchesSearch) {
                     markersGroup.addLayer(marker);
                     visibleCount++;
                 }
