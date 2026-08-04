@@ -38,33 +38,6 @@
             border-top: 1px solid #eee;
         }
 
-        /* Animerad tidslinjespelare längst ner */
-        #timeline-container {
-            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; background: rgba(255, 255, 255, 0.95);
-            padding: 10px 20px; border-radius: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid #ff6600;
-            display: flex; align-items: center; gap: 15px; min-width: 320px;
-        }
-
-        .timeline-btn {
-            background: #ff6600; color: white; border: none;
-            width: 36px; height: 36px; border-radius: 50%;
-            font-size: 14px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center;
-            transition: background 0.2s, transform 0.1s;
-        }
-        .timeline-btn:hover { background: #e05500; transform: scale(1.05); }
-
-        .timeline-slider {
-            flex-grow: 1; accent-color: #ff6600; cursor: pointer;
-        }
-
-        .timeline-label {
-            font-weight: bold; font-size: 14px; color: #333;
-            min-width: 65px; text-align: right;
-        }
-
         /* Koordinatvisning för admin */
         .admin-coord-display {
             position: absolute; bottom: 25px; left: 20px;
@@ -131,7 +104,6 @@
         }
 
         @media (max-width: 600px) {
-            #timeline-container { width: 85%; bottom: 15px; }
             .admin-coord-display { display: none; }
         }
     </style>
@@ -145,7 +117,7 @@
         </div>
         <div class="filter-group">
             <label for="year-filter">Välj år:</label>
-            <select id="year-filter" onchange="syncTimelineFromDropdown()">
+            <select id="year-filter" onchange="filterMarkers()">
                 <option value="all">Alla år</option>
             </select>
         </div>
@@ -158,13 +130,6 @@
         <div class="result-count">
             Visar <span id="count-number">0</span> kartor
         </div>
-    </div>
-
-    <!-- Tidslinjespelare -->
-    <div id="timeline-container">
-        <button id="play-btn" class="timeline-btn" onclick="togglePlayPause()">▶</button>
-        <input type="range" id="timeline-slider" class="timeline-slider" min="2000" max="2026" value="2026" oninput="onSliderChange()">
-        <span id="timeline-year-label" class="timeline-label">Alla år</span>
     </div>
 
     <div id="map"></div>
@@ -196,8 +161,8 @@
         osmStandard.addTo(map);
 
         L.control.layers({
-            "Ljus karta": cartoLight,
             "Gatukarta": osmStandard,
+            "Ljus karta": cartoLight,
             "Satellit": esriSatellite
         }, null, { position: 'topleft' }).addTo(map);
 
@@ -227,9 +192,6 @@
         }
 
         let allMarkersList = [];
-        let sortedYearsList = [];
-        let isPlaying = false;
-        let playTimer = null;
 
         async function loadData() {
             Papa.parse(csvUrl, {
@@ -286,16 +248,9 @@
                         }
                     });
 
-                    sortedYearsList = Array.from(yearsFound).sort((a, b) => a - b);
+                    const sortedYearsList = Array.from(yearsFound).sort((a, b) => b - a);
 
-                    if (sortedYearsList.length > 0) {
-                        const slider = document.getElementById('timeline-slider');
-                        slider.min = 0;
-                        slider.max = sortedYearsList.length;
-                        slider.value = sortedYearsList.length;
-                    }
-
-                    [...sortedYearsList].reverse().forEach(year => {
+                    sortedYearsList.forEach(year => {
                         const opt = document.createElement('option');
                         opt.value = year; opt.innerHTML = year;
                         yearFilterMenu.appendChild(opt);
@@ -342,79 +297,6 @@
                     duration: 0.8
                 });
             }
-        }
-
-        function onSliderChange() {
-            const slider = document.getElementById('timeline-slider');
-            const val = parseInt(slider.value, 10);
-            const yearLabel = document.getElementById('timeline-year-label');
-            const yearSelect = document.getElementById('year-filter');
-
-            if (val >= sortedYearsList.length) {
-                yearSelect.value = "all";
-                yearLabel.textContent = "Alla år";
-            } else {
-                const year = String(sortedYearsList[val]);
-                yearSelect.value = year;
-                yearLabel.textContent = year;
-            }
-
-            filterMarkers(true);
-        }
-
-        function syncTimelineFromDropdown() {
-            const selectedYear = document.getElementById('year-filter').value;
-            const slider = document.getElementById('timeline-slider');
-            const yearLabel = document.getElementById('timeline-year-label');
-
-            if (selectedYear === "all") {
-                slider.value = sortedYearsList.length;
-                yearLabel.textContent = "Alla år";
-            } else {
-                const idx = sortedYearsList.indexOf(parseInt(selectedYear, 10));
-                if (idx !== -1) {
-                    slider.value = idx;
-                    yearLabel.textContent = selectedYear;
-                }
-            }
-            filterMarkers(true);
-        }
-
-        function togglePlayPause() {
-            if (isPlaying) {
-                stopPlayback();
-            } else {
-                startPlayback();
-            }
-        }
-
-        function startPlayback() {
-            const slider = document.getElementById('timeline-slider');
-            if (parseInt(slider.value, 10) >= sortedYearsList.length) {
-                slider.value = 0;
-            }
-            isPlaying = true;
-            document.getElementById('play-btn').innerHTML = '⏸';
-            
-            onSliderChange();
-
-            playTimer = setInterval(() => {
-                let currentVal = parseInt(slider.value, 10);
-                if (currentVal < sortedYearsList.length - 1) {
-                    slider.value = currentVal + 1;
-                    onSliderChange();
-                } else {
-                    slider.value = sortedYearsList.length;
-                    onSliderChange();
-                    stopPlayback();
-                }
-            }, 1800);
-        }
-
-        function stopPlayback() {
-            isPlaying = false;
-            clearInterval(playTimer);
-            document.getElementById('play-btn').innerHTML = '▶';
         }
 
         map.on('click', function(e) {
