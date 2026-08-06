@@ -28,13 +28,14 @@
         .top-btn:hover { background: #fff5ee; }
         .top-btn:active { transform: scale(0.97); }
 
-        /* Filter-menyn */
+        /* Filter-menyn med fixerad beräkning av höjd */
         #filter-container {
             position: absolute; top: 55px; right: 15px; z-index: 1000;
             background: white; padding: 15px; border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); border-left: 5px solid #ff6600;
-            display: flex; flex-direction: column; gap: 10px; width: 250px;
-            max-height: calc(100vh - 80px);
+            display: flex; flex-direction: column; gap: 10px; width: 260px;
+            box-sizing: border-box;
+            max-height: calc(100vh - 75px);
             overflow-y: auto;
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
@@ -71,7 +72,7 @@
         }
         .inner-stats-btn:hover { background: #e05500; }
 
-        /* Statistik-ruta / modal */
+        /* Statistik-ruta */
         #stats-box {
             background: #fff8f5; border: 1px solid #ffd8c2;
             padding: 10px; border-radius: 6px; font-size: 12px;
@@ -191,7 +192,6 @@
         
         <div class="result-count">
             <span>Visar <strong id="count-number">0</strong> kartor</span>
-            <!-- Knapp inne i filtermenyn -->
             <button class="inner-stats-btn" onclick="toggleStats()">📊 Visa statistik</button>
         </div>
 
