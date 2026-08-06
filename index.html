@@ -52,7 +52,7 @@
             border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; 
         }
 
-        /* Räknare */
+        /* Räknare & Knapp i menyn */
         .result-count {
             font-size: 12px;
             color: #555;
@@ -63,6 +63,13 @@
             justify-content: space-between;
             align-items: center;
         }
+
+        .inner-stats-btn {
+            background: #ff6600; color: white; border: none;
+            padding: 4px 8px; border-radius: 4px; font-size: 11px;
+            cursor: pointer; font-weight: bold;
+        }
+        .inner-stats-btn:hover { background: #e05500; }
 
         /* Statistik-ruta / modal */
         #stats-box {
@@ -184,6 +191,8 @@
         
         <div class="result-count">
             <span>Visar <strong id="count-number">0</strong> kartor</span>
+            <!-- Knapp inne i filtermenyn -->
+            <button class="inner-stats-btn" onclick="toggleStats()">📊 Visa statistik</button>
         </div>
 
         <div id="stats-box" style="display: none;">
@@ -251,7 +260,6 @@
             const container = document.getElementById('filter-container');
             const statsBox = document.getElementById('stats-box');
             
-            // Öppna panelen om den var stängd
             if (container.classList.contains('filter-hidden')) {
                 toggleFilterMenu();
             }
