@@ -13,12 +13,29 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100vh; width: 100%; }
         
+        /* Knapp för att visa/dölja filter */
+        #toggle-filter-btn {
+            position: absolute; top: 15px; right: 15px; z-index: 1001;
+            background: white; border: 2px solid #ff6600; color: #333;
+            padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: background 0.2s, transform 0.1s;
+        }
+        #toggle-filter-btn:hover { background: #fff5ee; }
+        #toggle-filter-btn:active { transform: scale(0.97); }
+
         /* Filter-menyn */
         #filter-container {
-            position: absolute; top: 15px; right: 15px; z-index: 1000;
+            position: absolute; top: 55px; right: 15px; z-index: 1000;
             background: white; padding: 15px; border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); border-left: 5px solid #ff6600;
             display: flex; flex-direction: column; gap: 10px; width: 220px;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        /* Klass för att dölja filter-menyn */
+        .filter-hidden {
+            display: none !important;
         }
 
         .filter-group { display: flex; flex-direction: column; }
@@ -29,14 +46,34 @@
             border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; 
         }
 
-        /* Räknare för träffar */
+        /* Räknare & Statistik */
         .result-count {
             font-size: 12px;
             color: #555;
             font-weight: bold;
-            padding-top: 4px;
+            padding-top: 6px;
             border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+
+        .stats-btn {
+            background: #ff6600; color: white; border: none;
+            padding: 3px 8px; border-radius: 4px; font-size: 11px;
+            cursor: pointer; font-weight: bold;
+        }
+        .stats-btn:hover { background: #e05500; }
+
+        /* Statistik-ruta / modal */
+        #stats-box {
+            background: #fff8f5; border: 1px solid #ffd8c2;
+            padding: 10px; border-radius: 6px; font-size: 12px;
+            margin-top: 5px; color: #333;
+        }
+        #stats-box h4 { margin: 0 0 6px 0; font-size: 13px; color: #ff6600; }
+        #stats-box ul { margin: 0; padding-left: 15px; }
+        #stats-box li { margin-bottom: 3px; }
 
         /* Koordinatvisning för admin */
         .admin-coord-display {
@@ -121,7 +158,11 @@
 </head>
 <body>
 
-    <div id="filter-container">
+    <!-- Knapp för att öppna/stänga menyn -->
+    <button id="toggle-filter-btn" onclick="toggleFilterMenu()">🔍 Filtrera kartor</button>
+
+    <!-- Filter-menyn -->
+    <div id="filter-container" class="filter-hidden">
         <div class="filter-group">
             <label for="name-search">Sök tävling:</label>
             <input type="text" id="name-search" placeholder="T.ex. O-Ringen..." oninput="filterMarkers()">
@@ -138,8 +179,19 @@
                 <option value="all">Alla arrangörer</option>
             </select>
         </div>
+        
         <div class="result-count">
-            Visar <span id="count-number">0</span> kartor
+            <span>Visar <strong id="count-number">0</strong> kartor</span>
+            <button class="stats-btn" onclick="toggleStats()">📊 Statistik</button>
+        </div>
+
+        <div id="stats-box" style="display: none;">
+            <h4>Statistik för urvalet</h4>
+            <ul>
+                <li>Total sträcka: <strong id="stat-dist">0</strong> km</li>
+                <li>Årsspann: <strong id="stat-years">-</strong></li>
+                <li>Arrangörer: <strong id="stat-orgs">0</strong> st</li>
+            </ul>
         </div>
     </div>
 
@@ -182,6 +234,19 @@
             spiderfyOnMaxZoom: true,
             disableClusteringAtZoom: 17
         });
+
+        function toggleFilterMenu() {
+            const container = document.getElementById('filter-container');
+            const btn = document.getElementById('toggle-filter-btn');
+            
+            container.classList.toggle('filter-hidden');
+            btn.innerHTML = container.classList.contains('filter-hidden') ? '🔍 Filtrera kartor' : '✕ Stäng filter';
+        }
+
+        function toggleStats() {
+            const statsBox = document.getElementById('stats-box');
+            statsBox.style.display = (statsBox.style.display === 'none') ? 'block' : 'none';
+        }
 
         function createYearIcon(year) {
             return L.divIcon({
@@ -226,7 +291,7 @@
                             namn: row["Namn"] || "",
                             ar: parseInt(row["År"], 10),
                             arrangor: row["Arrangör"] || "",
-                            langd: row["Längd_m"],
+                            langd: parseCoord(row["Längd_m"]) || 0,
                             tid: row["Tid"] || "",
                             lat: parseCoord(row["Latitud"]),
                             lng: parseCoord(row["Longitud"]),
@@ -258,6 +323,7 @@
                             marker.year = String(item.ar);
                             marker.arrangor = String(item.arrangor);
                             marker.namn = String(item.namn).toLowerCase();
+                            marker.langd = item.langd;
                             
                             allMarkersList.push(marker);
                             if(item.ar && !isNaN(item.ar)) yearsFound.add(item.ar);
@@ -292,6 +358,9 @@
             
             markersGroup.clearLayers();
             let visibleCount = 0;
+            let totalMeters = 0;
+            const visibleYears = [];
+            const visibleOrgs = new Set();
             
             allMarkersList.forEach(marker => {
                 const matchesYear = (selectedYear === "all" || marker.year === selectedYear);
@@ -301,10 +370,25 @@
                 if (matchesYear && matchesOrganizer && matchesSearch) {
                     markersGroup.addLayer(marker);
                     visibleCount++;
+                    if (marker.langd) totalMeters += marker.langd;
+                    if (marker.year && marker.year !== 'NaN') visibleYears.push(parseInt(marker.year, 10));
+                    if (marker.arrangor) visibleOrgs.add(marker.arrangor);
                 }
             });
 
             document.getElementById('count-number').textContent = visibleCount;
+
+            // Uppdatera statistik-fält
+            document.getElementById('stat-dist').textContent = (totalMeters / 1000).toFixed(1);
+            document.getElementById('stat-orgs').textContent = visibleOrgs.size;
+            
+            if (visibleYears.length > 0) {
+                const minYear = Math.min(...visibleYears);
+                const maxYear = Math.max(...visibleYears);
+                document.getElementById('stat-years').textContent = minYear === maxYear ? minYear : `${minYear} - ${maxYear}`;
+            } else {
+                document.getElementById('stat-years').textContent = '-';
+            }
 
             if (visibleCount > 0 && autoZoom) {
                 map.fitBounds(markersGroup.getBounds(), {
