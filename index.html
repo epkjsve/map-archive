@@ -13,23 +13,29 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100vh; width: 100%; }
         
-        /* Knapp för att visa/dölja filter */
-        #toggle-filter-btn {
+        /* Knappar i övre högra hörnet */
+        .top-action-buttons {
             position: absolute; top: 15px; right: 15px; z-index: 1001;
+            display: flex; gap: 8px;
+        }
+
+        .top-btn {
             background: white; border: 2px solid #ff6600; color: #333;
             padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: bold;
             cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
             transition: background 0.2s, transform 0.1s;
         }
-        #toggle-filter-btn:hover { background: #fff5ee; }
-        #toggle-filter-btn:active { transform: scale(0.97); }
+        .top-btn:hover { background: #fff5ee; }
+        .top-btn:active { transform: scale(0.97); }
 
         /* Filter-menyn */
         #filter-container {
             position: absolute; top: 55px; right: 15px; z-index: 1000;
             background: white; padding: 15px; border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); border-left: 5px solid #ff6600;
-            display: flex; flex-direction: column; gap: 10px; width: 240px;
+            display: flex; flex-direction: column; gap: 10px; width: 250px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
@@ -46,7 +52,7 @@
             border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; 
         }
 
-        /* Räknare & Statistik */
+        /* Räknare */
         .result-count {
             font-size: 12px;
             color: #555;
@@ -57,13 +63,6 @@
             justify-content: space-between;
             align-items: center;
         }
-
-        .stats-btn {
-            background: #ff6600; color: white; border: none;
-            padding: 3px 8px; border-radius: 4px; font-size: 11px;
-            cursor: pointer; font-weight: bold;
-        }
-        .stats-btn:hover { background: #e05500; }
 
         /* Statistik-ruta / modal */
         #stats-box {
@@ -158,8 +157,11 @@
 </head>
 <body>
 
-    <!-- Knapp för att öppna/stänga menyn -->
-    <button id="toggle-filter-btn" onclick="toggleFilterMenu()">🔍 Filtrera kartor</button>
+    <!-- Knappar i övre högra hörnet -->
+    <div class="top-action-buttons">
+        <button id="toggle-filter-btn" class="top-btn" onclick="toggleFilterMenu()">🔍 Filtrera kartor</button>
+        <button id="toggle-stats-btn" class="top-btn" onclick="toggleStats()">📊 Statistik</button>
+    </div>
 
     <!-- Filter-menyn -->
     <div id="filter-container" class="filter-hidden">
@@ -182,7 +184,6 @@
         
         <div class="result-count">
             <span>Visar <strong id="count-number">0</strong> kartor</span>
-            <button class="stats-btn" onclick="toggleStats()">📊 Statistik</button>
         </div>
 
         <div id="stats-box" style="display: none;">
@@ -247,7 +248,14 @@
         }
 
         function toggleStats() {
+            const container = document.getElementById('filter-container');
             const statsBox = document.getElementById('stats-box');
+            
+            // Öppna panelen om den var stängd
+            if (container.classList.contains('filter-hidden')) {
+                toggleFilterMenu();
+            }
+
             statsBox.style.display = (statsBox.style.display === 'none') ? 'block' : 'none';
         }
 
@@ -276,17 +284,16 @@
             return parseFloat(cleanStr);
         }
 
-        /* Hjälpfunktioner för att hantera tider i HH:MM:SS eller MM:SS */
         function parseTimeToSeconds(tidStr) {
             if (!tidStr) return 0;
             const parts = String(tidStr).trim().split(':').map(p => parseInt(p, 10));
             if (parts.some(isNaN)) return 0;
             
-            if (parts.length === 3) { // HH:MM:SS
+            if (parts.length === 3) {
                 return parts[0] * 3600 + parts[1] * 60 + parts[2];
-            } else if (parts.length === 2) { // MM:SS
+            } else if (parts.length === 2) {
                 return parts[0] * 60 + parts[1];
-            } else if (parts.length === 1) { // Minuter
+            } else if (parts.length === 1) {
                 return parts[0] * 60;
             }
             return 0;
@@ -410,7 +417,6 @@
                     markersGroup.addLayer(marker);
                     visibleCount++;
 
-                    // Sträcka
                     if (marker.langd) {
                         totalMeters += marker.langd;
                         if (!maxDistMarker || marker.langd > maxDistMarker.langd) {
@@ -418,7 +424,6 @@
                         }
                     }
 
-                    // Tid
                     if (marker.tidSekunder) {
                         totalSeconds += marker.tidSekunder;
                         if (!maxTimeMarker || marker.tidSekunder > maxTimeMarker.tidSekunder) {
@@ -433,11 +438,9 @@
 
             document.getElementById('count-number').textContent = visibleCount;
 
-            // Uppdatera statistik-fält
             document.getElementById('stat-dist').textContent = (totalMeters / 1000).toFixed(1);
             document.getElementById('stat-total-time').textContent = formatSecondsToTime(totalSeconds);
             
-            // Längsta bana
             if (maxDistMarker) {
                 const distKm = (maxDistMarker.langd / 1000).toFixed(2);
                 document.getElementById('stat-max-dist').textContent = `${distKm} km (${maxDistMarker.namn})`;
@@ -445,14 +448,12 @@
                 document.getElementById('stat-max-dist').textContent = '-';
             }
 
-            // Längsta tid
             if (maxTimeMarker) {
                 document.getElementById('stat-max-time').textContent = `${maxTimeMarker.tid} (${maxTimeMarker.namn})`;
             } else {
                 document.getElementById('stat-max-time').textContent = '-';
             }
 
-            // Arrangörer
             document.getElementById('stat-orgs').textContent = visibleOrgs.size;
             
             // Årsspann
