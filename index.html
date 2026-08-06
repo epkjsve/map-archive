@@ -13,10 +13,9 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100vh; width: 100%; }
         
-        /* Knappar i övre högra hörnet */
+        /* Enkel knapp i övre högra hörnet */
         .top-action-buttons {
             position: absolute; top: 15px; right: 15px; z-index: 1001;
-            display: flex; gap: 8px;
         }
 
         .top-btn {
@@ -165,10 +164,9 @@
 </head>
 <body>
 
-    <!-- Knappar i övre högra hörnet -->
+    <!-- Endast en knapp i övre högra hörnet -->
     <div class="top-action-buttons">
         <button id="toggle-filter-btn" class="top-btn" onclick="toggleFilterMenu()">🔍 Filtrera kartor</button>
-        <button id="toggle-stats-btn" class="top-btn" onclick="toggleStats()">📊 Statistik</button>
     </div>
 
     <!-- Filter-menyn -->
@@ -257,13 +255,7 @@
         }
 
         function toggleStats() {
-            const container = document.getElementById('filter-container');
             const statsBox = document.getElementById('stats-box');
-            
-            if (container.classList.contains('filter-hidden')) {
-                toggleFilterMenu();
-            }
-
             statsBox.style.display = (statsBox.style.display === 'none') ? 'block' : 'none';
         }
 
