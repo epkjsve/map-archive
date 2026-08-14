@@ -13,7 +13,6 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100vh; width: 100%; }
         
-        /* Enkel knapp i övre högra hörnet */
         .top-action-buttons {
             position: absolute; top: 15px; right: 15px; z-index: 1001;
         }
@@ -27,7 +26,6 @@
         .top-btn:hover { background: #fff5ee; }
         .top-btn:active { transform: scale(0.97); }
 
-        /* Filter-menyn */
         #filter-container {
             position: absolute; top: 55px; right: 15px; z-index: 1000;
             background: white; padding: 15px; border-radius: 8px;
@@ -39,10 +37,7 @@
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
-        /* Klass för att dölja filter-menyn */
-        .filter-hidden {
-            display: none !important;
-        }
+        .filter-hidden { display: none !important; }
 
         .filter-group { display: flex; flex-direction: column; }
         .filter-group label { font-weight: bold; font-size: 13px; margin-bottom: 3px; }
@@ -52,7 +47,6 @@
             border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; 
         }
 
-        /* Räknare & Knapp i menyn */
         .result-count {
             font-size: 12px;
             color: #555;
@@ -71,7 +65,6 @@
         }
         .inner-stats-btn:hover { background: #e05500; }
 
-        /* Statistik-ruta */
         #stats-box {
             background: #fff8f5; border: 1px solid #ffd8c2;
             padding: 10px; border-radius: 6px; font-size: 12px;
@@ -81,7 +74,6 @@
         #stats-box ul { margin: 0; padding-left: 15px; }
         #stats-box li { margin-bottom: 4px; }
 
-        /* Koordinatvisning för admin */
         .admin-coord-display {
             position: absolute; bottom: 25px; left: 20px;
             background: rgba(255, 255, 255, 0.95); padding: 12px; z-index: 1000;
@@ -100,7 +92,6 @@
         }
         .coord-btn:hover { background: #e0e0e0; }
 
-        /* Popup styling */
         .ol-popup { min-width: 280px; }
         .ol-popup h3 { margin: 0 0 2px 0; color: #333; font-size: 18px; }
         .ol-popup p.meta { margin: 0 0 12px 0; font-size: 12px; color: #666; border-bottom: 1px solid #eee; padding-bottom: 6px; }
@@ -164,12 +155,10 @@
 </head>
 <body>
 
-    <!-- Endast en filterknapp i övre högra hörnet -->
     <div class="top-action-buttons">
         <button id="toggle-filter-btn" class="top-btn" onclick="toggleFilterMenu()">🔍 Filtrera kartor</button>
     </div>
 
-    <!-- Filter-menyn -->
     <div id="filter-container" class="filter-hidden">
         <div class="filter-group">
             <label for="name-search">Sök tävling:</label>
@@ -313,6 +302,16 @@
 
         let allItemsList = [];
 
+        function getValueFromRow(row, possibleKeys) {
+            for (let key of possibleKeys) {
+                if (row[key] !== undefined) return row[key];
+                // Sök även fallobroende (case-insensitive)
+                const foundKey = Object.keys(row).find(k => k.trim().toLowerCase() === key.toLowerCase());
+                if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+            }
+            return "";
+        }
+
         async function loadData() {
             Papa.parse(csvUrl, {
                 download: true,
@@ -321,20 +320,37 @@
                 complete: function(results) {
                     allItemsList = [];
 
+                    if (!results.data || results.data.length === 0) {
+                        console.error("Ingen data hittades i CSV-filen.");
+                        return;
+                    }
+
                     results.data.forEach(row => {
+                        const namnVal = getValueFromRow(row, ["Namn", "namn"]);
+                        const arVal = getValueFromRow(row, ["År", "Ar", "ar", "year"]);
+                        const orgVal = getValueFromRow(row, ["Arrangör", "Arrangor", "arrangor", "organizer"]);
+                        const langdVal = getValueFromRow(row, ["Längd_m", "Langd_m", "Längd", "langd"]);
+                        const tidVal = getValueFromRow(row, ["Tid", "tid"]);
+                        const latVal = getValueFromRow(row, ["Latitud", "latitud", "Lat", "lat"]);
+                        const lngVal = getValueFromRow(row, ["Longitud", "longitud", "Lng", "lng", "Lon", "lon"]);
+                        const refVal = getValueFromRow(row, ["Referat", "referat"]);
+                        const pdfVal = getValueFromRow(row, ["PDF_URL", "pdf_url", "PDF"]);
+                        const splitVal = getValueFromRow(row, ["Splits_URL", "splits_url", "Splits"]);
+                        const routeVal = getValueFromRow(row, ["Route_URL", "route_url", "Livelox"]);
+
                         const item = {
-                            namn: row["Namn"] || "",
-                            ar: parseInt(row["År"], 10),
-                            arrangor: (row["Arrangör"] || "").trim(),
-                            langd: parseCoord(row["Längd_m"]) || 0,
-                            tid: row["Tid"] || "",
-                            tidSekunder: parseTimeToSeconds(row["Tid"]),
-                            lat: parseCoord(row["Latitud"]),
-                            lng: parseCoord(row["Longitud"]),
-                            referat: row["Referat"] || "Inget referat skrivet.",
-                            pdf: row["PDF_URL"],
-                            winsplits: row["Splits_URL"],
-                            livelox: row["Route_URL"]
+                            namn: namnVal || "",
+                            ar: parseInt(arVal, 10),
+                            arrangor: String(orgVal || "").trim(),
+                            langd: parseCoord(langdVal) || 0,
+                            tid: tidVal || "",
+                            tidSekunder: parseTimeToSeconds(tidVal),
+                            lat: parseCoord(latVal),
+                            lng: parseCoord(lngVal),
+                            referat: refVal || "Inget referat skrivet.",
+                            pdf: pdfVal,
+                            winsplits: splitVal,
+                            livelox: routeVal
                         };
 
                         if (!isNaN(item.lat) && !isNaN(item.lng)) {
@@ -369,18 +385,20 @@
                     });
 
                     map.addLayer(markersGroup);
-                    
-                    // Initialisera alla alternativ i dropdown-menyerna första gången
                     initFilterOptions();
                     filterMarkers();
+                },
+                error: function(err) {
+                    console.error("Fel vid laddning av CSV:", err);
                 }
             });
         }
 
-        // Fyller alla dropdowns med hela unika datamängden vid uppstart
         function initFilterOptions() {
             const yearSelect = document.getElementById('year-filter');
             const orgSelect = document.getElementById('organizer-filter');
+
+            if (!yearSelect || !orgSelect) return;
 
             const allYears = new Set();
             const allOrgs = new Set();
@@ -407,16 +425,16 @@
             });
         }
 
-        // Uppdaterar motstående dropdown beroende på vad användaren klickade på
         function updateDropdowns(source) {
             const yearSelect = document.getElementById('year-filter');
             const orgSelect = document.getElementById('organizer-filter');
+
+            if (!yearSelect || !orgSelect) return;
 
             const selectedYear = yearSelect.value;
             const selectedOrg = orgSelect.value;
 
             if (source === 'year') {
-                // Om användaren valde ett ÅR: Uppdatera Arrangörslistan så att endast tillgängliga arrangörer för det året visas
                 const availableOrgs = new Set();
                 allItemsList.forEach(item => {
                     if (selectedYear === "all" || String(item.ar) === selectedYear) {
@@ -433,7 +451,6 @@
                     orgSelect.appendChild(opt);
                 });
             } else if (source === 'organizer') {
-                // Om användaren valde en ARRANGÖR: Uppdatera Årslistan så att endast år som den arrangören var aktiv visas
                 const availableYears = new Set();
                 allItemsList.forEach(item => {
                     if (selectedOrg === "all" || item.arrangor === selectedOrg) {
@@ -458,9 +475,13 @@
         }
 
         function filterMarkers(autoZoom = true) {
-            const selectedYear = document.getElementById('year-filter').value;
-            const selectedOrganizer = document.getElementById('organizer-filter').value;
-            const searchText = document.getElementById('name-search').value.toLowerCase().trim();
+            const yearSelect = document.getElementById('year-filter');
+            const orgSelect = document.getElementById('organizer-filter');
+            const searchInput = document.getElementById('name-search');
+
+            const selectedYear = yearSelect ? yearSelect.value : "all";
+            const selectedOrganizer = orgSelect ? orgSelect.value : "all";
+            const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
             
             markersGroup.clearLayers();
             let visibleCount = 0;
@@ -501,41 +522,59 @@
                 }
             });
 
-            document.getElementById('count-number').textContent = visibleCount;
+            const countElem = document.getElementById('count-number');
+            if (countElem) countElem.textContent = visibleCount;
 
-            document.getElementById('stat-dist').textContent = (totalMeters / 1000).toFixed(1);
-            document.getElementById('stat-total-time').textContent = formatSecondsToTime(totalSeconds);
+            const statDist = document.getElementById('stat-dist');
+            if (statDist) statDist.textContent = (totalMeters / 1000).toFixed(1);
+
+            const statTime = document.getElementById('stat-total-time');
+            if (statTime) statTime.textContent = formatSecondsToTime(totalSeconds);
             
-            if (maxDistItem) {
-                const distKm = (maxDistItem.langd / 1000).toFixed(2);
-                document.getElementById('stat-max-dist').textContent = `${distKm} km (${maxDistItem.namn})`;
-            } else {
-                document.getElementById('stat-max-dist').textContent = '-';
+            const statMaxDist = document.getElementById('stat-max-dist');
+            if (statMaxDist) {
+                if (maxDistItem) {
+                    const distKm = (maxDistItem.langd / 1000).toFixed(2);
+                    statMaxDist.textContent = `${distKm} km (${maxDistItem.namn})`;
+                } else {
+                    statMaxDist.textContent = '-';
+                }
             }
 
-            if (maxTimeItem) {
-                document.getElementById('stat-max-time').textContent = `${maxTimeItem.tid} (${maxTimeItem.namn})`;
-            } else {
-                document.getElementById('stat-max-time').textContent = '-';
+            const statMaxTime = document.getElementById('stat-max-time');
+            if (statMaxTime) {
+                if (maxTimeItem) {
+                    statMaxTime.textContent = `${maxTimeItem.tid} (${maxTimeItem.namn})`;
+                } else {
+                    statMaxTime.textContent = '-';
+                }
             }
 
-            document.getElementById('stat-orgs').textContent = visibleOrgs.size;
+            const statOrgs = document.getElementById('stat-orgs');
+            if (statOrgs) statOrgs.textContent = visibleOrgs.size;
             
-            if (visibleYears.length > 0) {
-                const minYear = Math.min(...visibleYears);
-                const maxYear = Math.max(...visibleYears);
-                document.getElementById('stat-years').textContent = minYear === maxYear ? minYear : `${minYear} - ${maxYear}`;
-            } else {
-                document.getElementById('stat-years').textContent = '-';
+            const statYears = document.getElementById('stat-years');
+            if (statYears) {
+                if (visibleYears.length > 0) {
+                    const minYear = Math.min(...visibleYears);
+                    const maxYear = Math.max(...visibleYears);
+                    statYears.textContent = minYear === maxYear ? minYear : `${minYear} - ${maxYear}`;
+                } else {
+                    statYears.textContent = '-';
+                }
             }
 
             if (visibleCount > 0 && autoZoom) {
-                map.fitBounds(markersGroup.getBounds(), {
-                    padding: [60, 60],
-                    maxZoom: 13,
-                    animate: true,
-                    duration: 0.8
-                });
+                try {
+                    map.fitBounds(markersGroup.getBounds(), {
+                        padding: [60, 60],
+                        maxZoom: 13,
+                        animate: true,
+                        duration: 0.8
+                    });
+                } catch(e) {
+                    console.warn("Kunde inte anpassa kartvy:", e);
+                }
             }
         }
 
