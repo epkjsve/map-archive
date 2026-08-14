@@ -216,7 +216,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
     
-   <script>
+    <script>
         const csvBaseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTiIvWU6vJ_oiLei4yVUVRjROhqhDOUVxE5H796BTNBHbRRXz6tgMtL777NatJMlHkyF1oXKknvMEDk/pub?output=csv';
         const csvUrl = csvBaseUrl + '&t=' + new Date().getTime();
 
@@ -397,7 +397,7 @@
                 }
             });
 
-            // Uppdatera År-dropdown utan att rensa om samma val finns
+            // Uppdatera År-dropdown
             yearSelect.innerHTML = '<option value="all">Alla år</option>';
             Array.from(availableYears).sort((a, b) => b - a).forEach(year => {
                 const opt = document.createElement('option');
