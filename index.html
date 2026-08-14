@@ -173,17 +173,17 @@
     <div id="filter-container" class="filter-hidden">
         <div class="filter-group">
             <label for="name-search">Sök tävling:</label>
-            <input type="text" id="name-search" placeholder="T.ex. O-Ringen..." oninput="onFilterChange()">
+            <input type="text" id="name-search" placeholder="T.ex. O-Ringen..." oninput="onFilterChange('search')">
         </div>
         <div class="filter-group">
             <label for="year-filter">Välj år:</label>
-            <select id="year-filter" onchange="onFilterChange()">
+            <select id="year-filter" onchange="onFilterChange('year')">
                 <option value="all">Alla år</option>
             </select>
         </div>
         <div class="filter-group">
             <label for="organizer-filter">Välj arrangör:</label>
-            <select id="organizer-filter" onchange="onFilterChange()">
+            <select id="organizer-filter" onchange="onFilterChange('organizer')">
                 <option value="all">Alla arrangörer</option>
             </select>
         </div>
@@ -369,68 +369,98 @@
                     });
 
                     map.addLayer(markersGroup);
-                    populateFilterOptions();
+                    
+                    // Initialisera alla alternativ i dropdown-menyerna första gången
+                    initFilterOptions();
                     filterMarkers();
                 }
             });
         }
 
-        function populateFilterOptions() {
+        // Fyller alla dropdowns med hela unika datamängden vid uppstart
+        function initFilterOptions() {
             const yearSelect = document.getElementById('year-filter');
             const orgSelect = document.getElementById('organizer-filter');
 
-            const selectedYear = yearSelect.value || "all";
-            const selectedOrg = orgSelect.value || "all";
-
-            const availableYears = new Set();
-            const availableOrgs = new Set();
+            const allYears = new Set();
+            const allOrgs = new Set();
 
             allItemsList.forEach(item => {
-                const matchesOrg = (selectedOrg === "all" || item.arrangor === selectedOrg);
-                const matchesYear = (selectedYear === "all" || String(item.ar) === selectedYear);
-
-                if (matchesOrg && item.ar && !isNaN(item.ar)) {
-                    availableYears.add(item.ar);
-                }
-                if (matchesYear && item.arrangor) {
-                    availableOrgs.add(item.arrangor);
-                }
+                if (item.ar && !isNaN(item.ar)) allYears.add(item.ar);
+                if (item.arrangor) allOrgs.add(item.arrangor);
             });
 
-            // Uppdatera År-dropdown
             yearSelect.innerHTML = '<option value="all">Alla år</option>';
-            Array.from(availableYears).sort((a, b) => b - a).forEach(year => {
+            Array.from(allYears).sort((a, b) => b - a).forEach(year => {
                 const opt = document.createElement('option');
                 opt.value = String(year);
                 opt.textContent = year;
-                if (String(year) === selectedYear) opt.selected = true;
                 yearSelect.appendChild(opt);
             });
 
-            // Uppdatera Arrangör-dropdown
             orgSelect.innerHTML = '<option value="all">Alla arrangörer</option>';
-            Array.from(availableOrgs).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
+            Array.from(allOrgs).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
                 const opt = document.createElement('option');
                 opt.value = org;
                 opt.textContent = org;
-                if (org === selectedOrg) opt.selected = true;
                 orgSelect.appendChild(opt);
             });
         }
 
-        function onFilterChange() {
-            populateFilterOptions();
+        // Uppdaterar motstående dropdown beroende på vad användaren klickade på
+        function updateDropdowns(source) {
+            const yearSelect = document.getElementById('year-filter');
+            const orgSelect = document.getElementById('organizer-filter');
+
+            const selectedYear = yearSelect.value;
+            const selectedOrg = orgSelect.value;
+
+            if (source === 'year') {
+                // Om användaren valde ett ÅR: Uppdatera Arrangörslistan så att endast tillgängliga arrangörer för det året visas
+                const availableOrgs = new Set();
+                allItemsList.forEach(item => {
+                    if (selectedYear === "all" || String(item.ar) === selectedYear) {
+                        if (item.arrangor) availableOrgs.add(item.arrangor);
+                    }
+                });
+
+                orgSelect.innerHTML = '<option value="all">Alla arrangörer</option>';
+                Array.from(availableOrgs).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
+                    const opt = document.createElement('option');
+                    opt.value = org;
+                    opt.textContent = org;
+                    if (org === selectedOrg) opt.selected = true;
+                    orgSelect.appendChild(opt);
+                });
+            } else if (source === 'organizer') {
+                // Om användaren valde en ARRANGÖR: Uppdatera Årslistan så att endast år som den arrangören var aktiv visas
+                const availableYears = new Set();
+                allItemsList.forEach(item => {
+                    if (selectedOrg === "all" || item.arrangor === selectedOrg) {
+                        if (item.ar && !isNaN(item.ar)) availableYears.add(item.ar);
+                    }
+                });
+
+                yearSelect.innerHTML = '<option value="all">Alla år</option>';
+                Array.from(availableYears).sort((a, b) => b - a).forEach(year => {
+                    const opt = document.createElement('option');
+                    opt.value = String(year);
+                    opt.textContent = year;
+                    if (String(year) === selectedYear) opt.selected = true;
+                    yearSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function onFilterChange(source) {
+            updateDropdowns(source);
             filterMarkers();
         }
 
         function filterMarkers(autoZoom = true) {
-            const yearSelect = document.getElementById('year-filter');
-            const orgSelect = document.getElementById('organizer-filter');
-            const searchInput = document.getElementById('name-search');
-
-            const selectedYear = yearSelect ? yearSelect.value : "all";
-            const selectedOrganizer = orgSelect ? orgSelect.value : "all";
-            const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            const selectedYear = document.getElementById('year-filter').value;
+            const selectedOrganizer = document.getElementById('organizer-filter').value;
+            const searchText = document.getElementById('name-search').value.toLowerCase().trim();
             
             markersGroup.clearLayers();
             let visibleCount = 0;
