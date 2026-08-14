@@ -216,7 +216,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.js"></script>
     
-    <script>
+   <script>
         const csvBaseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTiIvWU6vJ_oiLei4yVUVRjROhqhDOUVxE5H796BTNBHbRRXz6tgMtL777NatJMlHkyF1oXKknvMEDk/pub?output=csv';
         const csvUrl = csvBaseUrl + '&t=' + new Date().getTime();
 
@@ -368,8 +368,8 @@
                         }
                     });
 
-                    populateFilterOptions();
                     map.addLayer(markersGroup);
+                    populateFilterOptions();
                     filterMarkers();
                 }
             });
@@ -379,8 +379,8 @@
             const yearSelect = document.getElementById('year-filter');
             const orgSelect = document.getElementById('organizer-filter');
 
-            const selectedYear = yearSelect.value;
-            const selectedOrg = orgSelect.value;
+            const selectedYear = yearSelect.value || "all";
+            const selectedOrg = orgSelect.value || "all";
 
             const availableYears = new Set();
             const availableOrgs = new Set();
@@ -397,11 +397,11 @@
                 }
             });
 
-            // Uppdatera År-dropdown
+            // Uppdatera År-dropdown utan att rensa om samma val finns
             yearSelect.innerHTML = '<option value="all">Alla år</option>';
             Array.from(availableYears).sort((a, b) => b - a).forEach(year => {
                 const opt = document.createElement('option');
-                opt.value = year;
+                opt.value = String(year);
                 opt.textContent = year;
                 if (String(year) === selectedYear) opt.selected = true;
                 yearSelect.appendChild(opt);
@@ -424,9 +424,13 @@
         }
 
         function filterMarkers(autoZoom = true) {
-            const selectedYear = document.getElementById('year-filter').value;
-            const selectedOrganizer = document.getElementById('organizer-filter').value;
-            const searchText = document.getElementById('name-search').value.toLowerCase().trim();
+            const yearSelect = document.getElementById('year-filter');
+            const orgSelect = document.getElementById('organizer-filter');
+            const searchInput = document.getElementById('name-search');
+
+            const selectedYear = yearSelect ? yearSelect.value : "all";
+            const selectedOrganizer = orgSelect ? orgSelect.value : "all";
+            const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
             
             markersGroup.clearLayers();
             let visibleCount = 0;
