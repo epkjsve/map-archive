@@ -28,7 +28,6 @@
         .top-btn:hover { background: #fff5ee; }
         .top-btn:active { transform: scale(0.97); }
 
-        /* Filter-menyn */
         #filter-container {
             position: absolute; top: 55px; right: 15px; z-index: 1000;
             background: white; padding: 15px; border-radius: 8px;
@@ -40,10 +39,7 @@
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
-        /* Klass för att dölja filter-menyn */
-        .filter-hidden {
-            display: none !important;
-        }
+        .filter-hidden { display: none !important; }
 
         .filter-group { display: flex; flex-direction: column; }
         .filter-group label { font-weight: bold; font-size: 13px; margin-bottom: 3px; }
@@ -53,7 +49,6 @@
             border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; 
         }
 
-        /* Räknare & Knapp i menyn */
         .result-count {
             font-size: 12px;
             color: #555;
@@ -72,7 +67,6 @@
         }
         .inner-stats-btn:hover { background: #e05500; }
 
-        /* Statistik-ruta */
         #stats-box {
             background: #fff8f5; border: 1px solid #ffd8c2;
             padding: 10px; border-radius: 6px; font-size: 12px;
@@ -82,7 +76,6 @@
         #stats-box ul { margin: 0; padding-left: 15px; }
         #stats-box li { margin-bottom: 4px; }
 
-        /* Koordinatvisning för admin */
         .admin-coord-display {
             position: absolute; bottom: 25px; left: 20px;
             background: rgba(255, 255, 255, 0.95); padding: 12px; z-index: 1000;
@@ -101,7 +94,6 @@
         }
         .coord-btn:hover { background: #e0e0e0; }
 
-        /* Popup styling */
         .ol-popup { min-width: 280px; }
         .ol-popup h3 { margin: 0 0 2px 0; color: #333; font-size: 18px; }
         .ol-popup p.meta { margin: 0 0 12px 0; font-size: 12px; color: #666; border-bottom: 1px solid #eee; padding-bottom: 6px; }
@@ -171,21 +163,20 @@
         <button id="toggle-filter-btn" class="top-btn" onclick="toggleFilterMenu()">🔍 Filtrera kartor</button>
     </div>
 
-    <!-- Filter-menyn -->
     <div id="filter-container" class="filter-hidden">
         <div class="filter-group">
             <label for="name-search">Sök tävling:</label>
-            <input type="text" id="name-search" placeholder="T.ex. O-Ringen..." oninput="filterMarkers()">
+            <input type="text" id="name-search" placeholder="T.ex. O-Ringen..." oninput="onFilterChange('search')">
         </div>
         <div class="filter-group">
             <label for="year-filter">Välj år:</label>
-            <select id="year-filter" onchange="filterMarkers()">
+            <select id="year-filter" onchange="onFilterChange('year')">
                 <option value="all">Alla år</option>
             </select>
         </div>
         <div class="filter-group">
             <label for="organizer-filter">Välj arrangör:</label>
-            <select id="organizer-filter" onchange="filterMarkers()">
+            <select id="organizer-filter" onchange="onFilterChange('organizer')">
                 <option value="all">Alla arrangörer</option>
             </select>
         </div>
@@ -216,8 +207,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-    
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>    
     <script>
         const csvBaseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTiIvWU6vJ_oiLei4yVUVRjROhqhDOUVxE5H796BTNBHbRRXz6tgMtL777NatJMlHkyF1oXKknvMEDk/pub?output=csv';
         const csvUrl = csvBaseUrl + '&t=' + new Date().getTime();
@@ -354,7 +344,17 @@
             return `${minutes}m ${seconds}s`;
         }
 
-        let allMarkersList = [];
+        let allItemsList = [];
+
+        function getValueFromRow(row, possibleKeys) {
+            for (let key of possibleKeys) {
+                if (row[key] !== undefined) return row[key];
+                // Sök även fallobroende (case-insensitive)
+                const foundKey = Object.keys(row).find(k => k.trim().toLowerCase() === key.toLowerCase());
+                if (foundKey && row[foundKey] !== undefined) return row[foundKey];
+            }
+            return "";
+        }
 
         async function loadData() {
             Papa.parse(csvUrl, {
@@ -362,25 +362,39 @@
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
-                    const yearFilterMenu = document.getElementById('year-filter');
-                    const organizerFilterMenu = document.getElementById('organizer-filter');
-                    const yearsFound = new Set();
-                    const organizersFound = new Set();
+                    allItemsList = [];
+
+                    if (!results.data || results.data.length === 0) {
+                        console.error("Ingen data hittades i CSV-filen.");
+                        return;
+                    }
 
                     results.data.forEach(row => {
+                        const namnVal = getValueFromRow(row, ["Namn", "namn"]);
+                        const arVal = getValueFromRow(row, ["År", "Ar", "ar", "year"]);
+                        const orgVal = getValueFromRow(row, ["Arrangör", "Arrangor", "arrangor", "organizer"]);
+                        const langdVal = getValueFromRow(row, ["Längd_m", "Langd_m", "Längd", "langd"]);
+                        const tidVal = getValueFromRow(row, ["Tid", "tid"]);
+                        const latVal = getValueFromRow(row, ["Latitud", "latitud", "Lat", "lat"]);
+                        const lngVal = getValueFromRow(row, ["Longitud", "longitud", "Lng", "lng", "Lon", "lon"]);
+                        const refVal = getValueFromRow(row, ["Referat", "referat"]);
+                        const pdfVal = getValueFromRow(row, ["PDF_URL", "pdf_url", "PDF"]);
+                        const splitVal = getValueFromRow(row, ["Splits_URL", "splits_url", "Splits"]);
+                        const routeVal = getValueFromRow(row, ["Route_URL", "route_url", "Livelox"]);
+
                         const item = {
-                            namn: row["Namn"] || "",
-                            ar: parseInt(row["År"], 10),
-                            arrangor: row["Arrangör"] || "",
-                            langd: parseCoord(row["Längd_m"]) || 0,
-                            tid: row["Tid"] || "",
-                            tidSekunder: parseTimeToSeconds(row["Tid"]),
-                            lat: parseCoord(row["Latitud"]),
-                            lng: parseCoord(row["Longitud"]),
-                            referat: row["Referat"] || "Inget referat skrivet.",
-                            pdf: row["PDF_URL"],
-                            winsplits: row["Splits_URL"],
-                            livelox: row["Route_URL"]
+                            namn: namnVal || "",
+                            ar: parseInt(arVal, 10),
+                            arrangor: String(orgVal || "").trim(),
+                            langd: parseCoord(langdVal) || 0,
+                            tid: tidVal || "",
+                            tidSekunder: parseTimeToSeconds(tidVal),
+                            lat: parseCoord(latVal),
+                            lng: parseCoord(lngVal),
+                            referat: refVal || "Inget referat skrivet.",
+                            pdf: pdfVal,
+                            winsplits: splitVal,
+                            livelox: routeVal
                         };
 
                         if (!isNaN(item.lat) && !isNaN(item.lng)) {
@@ -409,111 +423,202 @@
                             marker.tid = item.tid;
                             marker.tidSekunder = item.tidSekunder;
                             
-                            allMarkersList.push(marker);
-                            if(item.ar && !isNaN(item.ar)) yearsFound.add(item.ar);
-                            if(item.arrangor.trim()) organizersFound.add(item.arrangor.trim());
+                            item.marker = marker;
+                            allItemsList.push(item);
                         }
                     });
 
-                    const sortedYearsList = Array.from(yearsFound).sort((a, b) => b - a);
-
-                    sortedYearsList.forEach(year => {
-                        const opt = document.createElement('option');
-                        opt.value = year; opt.innerHTML = year;
-                        yearFilterMenu.appendChild(opt);
-                    });
-
-                    Array.from(organizersFound).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
-                        const opt = document.createElement('option');
-                        opt.value = org; opt.innerHTML = org;
-                        organizerFilterMenu.appendChild(opt);
-                    });
-
                     map.addLayer(markersGroup);
+                    initFilterOptions();
                     filterMarkers();
+                },
+                error: function(err) {
+                    console.error("Fel vid laddning av CSV:", err);
                 }
             });
         }
 
+        function initFilterOptions() {
+            const yearSelect = document.getElementById('year-filter');
+            const orgSelect = document.getElementById('organizer-filter');
+
+            if (!yearSelect || !orgSelect) return;
+
+            const allYears = new Set();
+            const allOrgs = new Set();
+
+            allItemsList.forEach(item => {
+                if (item.ar && !isNaN(item.ar)) allYears.add(item.ar);
+                if (item.arrangor) allOrgs.add(item.arrangor);
+            });
+
+            yearSelect.innerHTML = '<option value="all">Alla år</option>';
+            Array.from(allYears).sort((a, b) => b - a).forEach(year => {
+                const opt = document.createElement('option');
+                opt.value = String(year);
+                opt.textContent = year;
+                yearSelect.appendChild(opt);
+            });
+
+            orgSelect.innerHTML = '<option value="all">Alla arrangörer</option>';
+            Array.from(allOrgs).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
+                const opt = document.createElement('option');
+                opt.value = org;
+                opt.textContent = org;
+                orgSelect.appendChild(opt);
+            });
+        }
+
+        function updateDropdowns(source) {
+            const yearSelect = document.getElementById('year-filter');
+            const orgSelect = document.getElementById('organizer-filter');
+
+            if (!yearSelect || !orgSelect) return;
+
+            const selectedYear = yearSelect.value;
+            const selectedOrg = orgSelect.value;
+
+            if (source === 'year') {
+                const availableOrgs = new Set();
+                allItemsList.forEach(item => {
+                    if (selectedYear === "all" || String(item.ar) === selectedYear) {
+                        if (item.arrangor) availableOrgs.add(item.arrangor);
+                    }
+                });
+
+                orgSelect.innerHTML = '<option value="all">Alla arrangörer</option>';
+                Array.from(availableOrgs).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
+                    const opt = document.createElement('option');
+                    opt.value = org;
+                    opt.textContent = org;
+                    if (org === selectedOrg) opt.selected = true;
+                    orgSelect.appendChild(opt);
+                });
+            } else if (source === 'organizer') {
+                const availableYears = new Set();
+                allItemsList.forEach(item => {
+                    if (selectedOrg === "all" || item.arrangor === selectedOrg) {
+                        if (item.ar && !isNaN(item.ar)) availableYears.add(item.ar);
+                    }
+                });
+
+                yearSelect.innerHTML = '<option value="all">Alla år</option>';
+                Array.from(availableYears).sort((a, b) => b - a).forEach(year => {
+                    const opt = document.createElement('option');
+                    opt.value = String(year);
+                    opt.textContent = year;
+                    if (String(year) === selectedYear) opt.selected = true;
+                    yearSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function onFilterChange(source) {
+            updateDropdowns(source);
+            filterMarkers();
+        }
+
         function filterMarkers(autoZoom = true) {
-            const selectedYear = document.getElementById('year-filter').value;
-            const selectedOrganizer = document.getElementById('organizer-filter').value;
-            const searchText = document.getElementById('name-search').value.toLowerCase().trim();
+            const yearSelect = document.getElementById('year-filter');
+            const orgSelect = document.getElementById('organizer-filter');
+            const searchInput = document.getElementById('name-search');
+
+            const selectedYear = yearSelect ? yearSelect.value : "all";
+            const selectedOrganizer = orgSelect ? orgSelect.value : "all";
+            const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
             
             markersGroup.clearLayers();
             let visibleCount = 0;
             let totalMeters = 0;
             let totalSeconds = 0;
             
-            let maxDistMarker = null;
-            let maxTimeMarker = null;
+            let maxDistItem = null;
+            let maxTimeItem = null;
 
             const visibleYears = [];
             const visibleOrgs = new Set();
             
-            allMarkersList.forEach(marker => {
-                const matchesYear = (selectedYear === "all" || marker.year === selectedYear);
-                const matchesOrganizer = (selectedOrganizer === "all" || marker.arrangor === selectedOrganizer);
-                const matchesSearch = (searchText === "" || marker.namn.toLowerCase().includes(searchText));
+            allItemsList.forEach(item => {
+                const matchesYear = (selectedYear === "all" || String(item.ar) === selectedYear);
+                const matchesOrganizer = (selectedOrganizer === "all" || item.arrangor === selectedOrganizer);
+                const matchesSearch = (searchText === "" || item.namn.toLowerCase().includes(searchText));
 
                 if (matchesYear && matchesOrganizer && matchesSearch) {
-                    markersGroup.addLayer(marker);
+                    markersGroup.addLayer(item.marker);
                     visibleCount++;
 
-                    if (marker.langd) {
-                        totalMeters += marker.langd;
-                        if (!maxDistMarker || marker.langd > maxDistMarker.langd) {
-                            maxDistMarker = marker;
+                    if (item.langd) {
+                        totalMeters += item.langd;
+                        if (!maxDistItem || item.langd > maxDistItem.langd) {
+                            maxDistItem = item;
                         }
                     }
 
-                    if (marker.tidSekunder) {
-                        totalSeconds += marker.tidSekunder;
-                        if (!maxTimeMarker || marker.tidSekunder > maxTimeMarker.tidSekunder) {
-                            maxTimeMarker = marker;
+                    if (item.tidSekunder) {
+                        totalSeconds += item.tidSekunder;
+                        if (!maxTimeItem || item.tidSekunder > maxTimeItem.tidSekunder) {
+                            maxTimeItem = item;
                         }
                     }
 
-                    if (marker.year && marker.year !== 'NaN') visibleYears.push(parseInt(marker.year, 10));
-                    if (marker.arrangor) visibleOrgs.add(marker.arrangor);
+                    if (item.ar && !isNaN(item.ar)) visibleYears.push(item.ar);
+                    if (item.arrangor) visibleOrgs.add(item.arrangor);
                 }
             });
 
-            document.getElementById('count-number').textContent = visibleCount;
+            const countElem = document.getElementById('count-number');
+            if (countElem) countElem.textContent = visibleCount;
 
-            document.getElementById('stat-dist').textContent = (totalMeters / 1000).toFixed(1);
-            document.getElementById('stat-total-time').textContent = formatSecondsToTime(totalSeconds);
+            const statDist = document.getElementById('stat-dist');
+            if (statDist) statDist.textContent = (totalMeters / 1000).toFixed(1);
+
+            const statTime = document.getElementById('stat-total-time');
+            if (statTime) statTime.textContent = formatSecondsToTime(totalSeconds);
             
-            if (maxDistMarker) {
-                const distKm = (maxDistMarker.langd / 1000).toFixed(2);
-                document.getElementById('stat-max-dist').textContent = `${distKm} km (${maxDistMarker.namn})`;
-            } else {
-                document.getElementById('stat-max-dist').textContent = '-';
+            const statMaxDist = document.getElementById('stat-max-dist');
+            if (statMaxDist) {
+                if (maxDistItem) {
+                    const distKm = (maxDistItem.langd / 1000).toFixed(2);
+                    statMaxDist.textContent = `${distKm} km (${maxDistItem.namn})`;
+                } else {
+                    statMaxDist.textContent = '-';
+                }
             }
 
-            if (maxTimeMarker) {
-                document.getElementById('stat-max-time').textContent = `${maxTimeMarker.tid} (${maxTimeMarker.namn})`;
-            } else {
-                document.getElementById('stat-max-time').textContent = '-';
+            const statMaxTime = document.getElementById('stat-max-time');
+            if (statMaxTime) {
+                if (maxTimeItem) {
+                    statMaxTime.textContent = `${maxTimeItem.tid} (${maxTimeItem.namn})`;
+                } else {
+                    statMaxTime.textContent = '-';
+                }
             }
 
-            document.getElementById('stat-orgs').textContent = visibleOrgs.size;
+            const statOrgs = document.getElementById('stat-orgs');
+            if (statOrgs) statOrgs.textContent = visibleOrgs.size;
             
-            if (visibleYears.length > 0) {
-                const minYear = Math.min(...visibleYears);
-                const maxYear = Math.max(...visibleYears);
-                document.getElementById('stat-years').textContent = minYear === maxYear ? minYear : `${minYear} - ${maxYear}`;
-            } else {
-                document.getElementById('stat-years').textContent = '-';
+            const statYears = document.getElementById('stat-years');
+            if (statYears) {
+                if (visibleYears.length > 0) {
+                    const minYear = Math.min(...visibleYears);
+                    const maxYear = Math.max(...visibleYears);
+                    statYears.textContent = minYear === maxYear ? minYear : `${minYear} - ${maxYear}`;
+                } else {
+                    statYears.textContent = '-';
+                }
             }
 
             if (visibleCount > 0 && autoZoom) {
-                map.fitBounds(markersGroup.getBounds(), {
-                    padding: [60, 60],
-                    maxZoom: 13,
-                    animate: true,
-                    duration: 0.8
-                });
+                try {
+                    map.fitBounds(markersGroup.getBounds(), {
+                        padding: [60, 60],
+                        maxZoom: 13,
+                        animate: true,
+                        duration: 0.8
+                    });
+                } catch(e) {
+                    console.warn("Kunde inte anpassa kartvy:", e);
+                }
             }
         }
 
