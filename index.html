@@ -76,23 +76,26 @@
         #stats-box ul { margin: 0; padding-left: 15px; }
         #stats-box li { margin-bottom: 4px; }
 
+        /* Kompakt och mobilanpassad koordinatruta */
         .admin-coord-display {
-            position: absolute; bottom: 25px; left: 20px;
-            background: rgba(255, 255, 255, 0.95); padding: 12px; z-index: 1000;
-            border: 2px solid #ff6600; border-radius: 8px; font-size: 13px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); min-width: 210px;
+            position: fixed; bottom: 15px; left: 15px;
+            background: rgba(255, 255, 255, 0.92); padding: 6px 10px; z-index: 1000;
+            border: 1.5px solid #ff6600; border-radius: 6px; font-size: 11px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15); max-width: 240px;
+            backdrop-filter: blur(2px);
+            color: #333;
         }
 
         .coord-row {
             display: flex; justify-content: space-between; align-items: center;
-            margin-top: 5px; font-size: 12px;
+            margin-top: 3px; font-size: 11px; gap: 8px;
         }
 
         .coord-btn {
-            padding: 2px 6px; border: 1px solid #ccc; background: #f0f0f0;
-            border-radius: 3px; cursor: pointer; font-size: 11px;
+            padding: 1px 5px; border: 1px solid #ccc; background: #fff;
+            border-radius: 3px; cursor: pointer; font-size: 10px;
         }
-        .coord-btn:hover { background: #e0e0e0; }
+        .coord-btn:hover { background: #f0f0f0; }
 
         .ol-popup { min-width: 280px; }
         .ol-popup h3 { margin: 0 0 2px 0; color: #333; font-size: 18px; }
@@ -151,7 +154,8 @@
         }
 
         @media (max-width: 600px) {
-            .admin-coord-display { bottom: 10px; left: 10px; right: 10px; font-size: 11px; }
+            .admin-coord-display { bottom: 10px; left: 10px; font-size: 10px; padding: 5px 8px; }
+            #filter-container { width: calc(100vw - 30px); right: 15px; }
         }
     </style>
 </head>
@@ -349,7 +353,6 @@
         function getValueFromRow(row, possibleKeys) {
             for (let key of possibleKeys) {
                 if (row[key] !== undefined) return row[key];
-                // Sök även fallobroende (case-insensitive)
                 const foundKey = Object.keys(row).find(k => k.trim().toLowerCase() === key.toLowerCase());
                 if (foundKey && row[foundKey] !== undefined) return row[foundKey];
             }
@@ -644,23 +647,23 @@
                     color: '#ff0000',
                     fillColor: '#ff6600',
                     fillOpacity: 0.8,
-                    radius: 8,
-                    weight: 3
+                    radius: 6,
+                    weight: 2
                 }).addTo(map);
             }
 
             document.getElementById('coords').innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
                     <strong>Admin-koordinater:</strong>
                     <button class="coord-btn" onclick="clearAdminMarker()" style="color: #c0392b; font-weight: bold;">✕ Rensa</button>
                 </div>
                 <div class="coord-row">
                     <span>Lat: <code>${lat}</code></span>
-                    <button class="coord-btn" onclick="navigator.clipboard.writeText('${lat}'); this.innerText='Kopierat!';">Kopiera Lat</button>
+                    <button class="coord-btn" onclick="navigator.clipboard.writeText('${lat}'); this.innerText='Kopierat!';">Kopiera</button>
                 </div>
                 <div class="coord-row">
-                    <span>Long: <code>${lng}</code></span>
-                    <button class="coord-btn" onclick="navigator.clipboard.writeText('${lng}'); this.innerText='Kopierat!';">Kopiera Lng</button>
+                    <span>Lng: <code>${lng}</code></span>
+                    <button class="coord-btn" onclick="navigator.clipboard.writeText('${lng}'); this.innerText='Kopierat!';">Kopiera</button>
                 </div>
             `;
         });
