@@ -137,6 +137,62 @@
             border: 1.5px solid #333; box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
+        .icon-sm {
+    background: #f1c40f !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.icon-dm {
+    background: #e67e22 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.icon-oringen {
+    background: #ff6600 !important;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.icon-traning {
+    background: #27ae60 !important;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.icon-natt {
+    background: #34495e !important;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.icon-stafett {
+    background: #3498db !important;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.icon-default {
+    background: linear-gradient(135deg, #ffffff 50%, #ff6600 50%) !important;
+}
+
         .ol-icon-year {
             position: absolute; top: 23px; left: 50%;
             transform: translateX(-50%); background: white;
@@ -296,14 +352,68 @@
             statsBox.style.display = (statsBox.style.display === 'none') ? 'block' : 'none';
         }
 
-        function createYearIcon(year) {
-            return L.divIcon({
-                className: 'ol-icon',
-                html: `<div class="ol-icon-inner"></div><div class="ol-icon-year">${year || ''}</div>`,
-                iconSize: [20, 20], iconAnchor: [10, 10]
-            });
-        }
+        function createYearIcon(year, typ) {
+             const icon = getIconForType(typ);
 
+             return L.divIcon({
+             className: 'ol-icon',
+              html: `
+                <div class="ol-icon-inner ${icon.className}">
+                    ${icon.symbol}
+                </div>
+                <div class="ol-icon-year">${year || ''}</div>
+            `,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+       }
+
+function getIconForType(typ) {
+    switch (String(typ || '').trim().toLowerCase()) {
+        case 'sm':
+            return {
+                className: 'icon-sm',
+                symbol: '🏆'
+            };
+
+        case 'dm':
+            return {
+                className: 'icon-dm',
+                symbol: '🥇'
+            };
+
+        case 'o-ringen':
+            return {
+                className: 'icon-oringen',
+                symbol: '★'
+            };
+
+        case 'träning':
+            return {
+                className: 'icon-traning',
+                symbol: '●'
+            };
+
+        case 'natt':
+            return {
+                className: 'icon-natt',
+                symbol: '☾'
+            };
+
+        case 'stafett':
+            return {
+                className: 'icon-stafett',
+                symbol: '👥'
+            };
+
+        default:
+            return {
+                className: 'icon-default',
+                symbol: ''
+            };
+    }
+}
+        
         function getButtonHtml(url, label, activeClass) {
             const cleanUrl = url ? String(url).trim() : "";
             const hasValidUrl = cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://");
@@ -376,6 +486,7 @@
                         const namnVal = getValueFromRow(row, ["Namn", "namn"]);
                         const arVal = getValueFromRow(row, ["År", "Ar", "ar", "year"]);
                         const orgVal = getValueFromRow(row, ["Arrangör", "Arrangor", "arrangor", "organizer"]);
+                        const typVal = getValueFromRow(row, ["Typ", "typ", "TYPE", "type"]);
                         const langdVal = getValueFromRow(row, ["Längd_m", "Langd_m", "Längd", "langd"]);
                         const tidVal = getValueFromRow(row, ["Tid", "tid"]);
                         const latVal = getValueFromRow(row, ["Latitud", "latitud", "Lat", "lat"]);
@@ -389,6 +500,7 @@
                             namn: namnVal || "",
                             ar: parseInt(arVal, 10),
                             arrangor: String(orgVal || "").trim(),
+                            typ: String(typVal || "").trim(),
                             langd: parseCoord(langdVal) || 0,
                             tid: tidVal || "",
                             tidSekunder: parseTimeToSeconds(tidVal),
@@ -401,8 +513,7 @@
                         };
 
                         if (!isNaN(item.lat) && !isNaN(item.lng)) {
-                            const marker = L.marker([item.lat, item.lng], { icon: createYearIcon(item.ar) });
-                            
+                            const marker = L.marker([item.lat, item.lng], {icon: createYearIcon(item.ar, item.typ)
                             const popupContent = `
                                 <div class="ol-popup">
                                     <h3>${item.namn}</h3>
@@ -422,6 +533,7 @@
                             marker.year = String(item.ar);
                             marker.arrangor = String(item.arrangor);
                             marker.namn = String(item.namn);
+                            marker.typ = String(item.typ);
                             marker.langd = item.langd;
                             marker.tid = item.tid;
                             marker.tidSekunder = item.tidSekunder;
