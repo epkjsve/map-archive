@@ -145,64 +145,242 @@
         }
 
         /* Olika symboler för olika tävlingstyper */
-        .icon-sm,
-        .icon-dm,
-        .icon-km,
-        .icon-oringen,
-        .icon-traning,
-        .icon-natt,
-        .icon-stafett {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
+.icon-sm,
+.icon-dm,
+.icon-km,
+.icon-oringen,
+.icon-traning,
+.icon-natt,
+.icon-stafett {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    border-radius: 50%;
+    position: relative;
+    box-sizing: border-box;
+    border: 1.5px solid rgba(0, 0, 0, 0.55);
+    box-shadow:
+        1px 2px 4px rgba(0, 0, 0, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
 
-        .icon-sm {
-            background: #c9a227 !important;
-            font-size: 11px;
-        }
 
-        .icon-dm {
-            background: #e67e22 !important;
-            font-size: 11px;
-        }
+/* =========================
+   SM
+   ========================= */
 
-        .icon-km {
-            background: #8e44ad !important;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-           font-weight: bold;
-        }
+.icon-sm {
+    background: linear-gradient(
+        145deg,
+        #f5d76e,
+        #c9a227
+    ) !important;
+}
 
-        .icon-oringen {
-            background: #ff6600 !important;
-            font-size: 14px;
-        }
 
-        .icon-traning {
-            background: #27ae60 !important;
-            font-size: 14px;
-        }
+/* =========================
+   DM
+   ========================= */
 
-        .icon-natt {
-            background: #34495e !important;
-            font-size: 14px;
-        }
+.icon-dm {
+    background: linear-gradient(
+        145deg,
+        #f3a85b,
+        #e67e22
+    ) !important;
+}
 
-        .icon-stafett {
-            background: #3498db !important;
-            font-size: 11px;
-        }
 
-        .icon-default {
-            background: linear-gradient(135deg, #ffffff 50%, #ff6600 50%) !important;
-        }
+/* =========================
+   KM
+   ========================= */
 
+.icon-km {
+    background: linear-gradient(
+        145deg,
+        #b276d2,
+        #8e44ad
+    ) !important;
+}
+
+
+/* =========================
+   Medaljsymbol
+   ========================= */
+
+.symbol-medal {
+    font-size: 7px;
+    line-height: 1;
+    letter-spacing: -0.3px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
+}
+
+
+/* =========================
+   O-Ringen
+   ========================= */
+
+.icon-oringen {
+    background: linear-gradient(
+        145deg,
+        #ff914d,
+        #ff6600
+    ) !important;
+}
+
+.symbol-star {
+    font-size: 15px;
+    line-height: 1;
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+
+/* =========================
+   Träning
+   ========================= */
+
+.icon-traning {
+    background: linear-gradient(
+        145deg,
+        #4dcc7a,
+        #27ae60
+    ) !important;
+}
+
+
+/* Orienteringsflagga */
+.symbol-flag {
+    position: relative;
+    width: 12px;
+    height: 12px;
+}
+
+
+/* Stång */
+.symbol-flag::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 1px;
+    width: 2px;
+    height: 10px;
+    background: white;
+    border-radius: 1px;
+}
+
+
+/* Flagga */
+.symbol-flag::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 7px;
+    height: 5px;
+    background: white;
+    clip-path: polygon(
+        0 0,
+        100% 20%,
+        70% 50%,
+        100% 80%,
+        0 100%
+    );
+}
+
+
+/* =========================
+   Natt
+   ========================= */
+
+.icon-natt {
+    background: linear-gradient(
+        145deg,
+        #536b82,
+        #34495e
+    ) !important;
+}
+
+
+/* Månskära */
+.symbol-moon {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: white;
+    position: relative;
+    display: block;
+}
+
+.symbol-moon::after {
+    content: "";
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #34495e;
+    left: 4px;
+    top: -2px;
+}
+
+
+/* =========================
+   Stafett
+   ========================= */
+
+.icon-stafett {
+    background: linear-gradient(
+        145deg,
+        #55a9df,
+        #3498db
+    ) !important;
+}
+
+
+/* Två "löpare" */
+.symbol-relay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.symbol-relay i {
+    display: block;
+    width: 5px;
+    height: 5px;
+    background: white;
+    border-radius: 50%;
+    position: relative;
+}
+
+
+/* Kropp */
+.symbol-relay i::after {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 4px;
+    background: white;
+    border-radius: 4px 4px 2px 2px;
+    left: -1px;
+    top: 5px;
+}
+
+
+/* =========================
+   Standard
+   ========================= */
+
+.icon-default {
+    background: linear-gradient(
+        135deg,
+        #ffffff 50%,
+        #ff6600 50%
+    ) !important;
+}
         .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
             background-color: rgba(255, 102, 0, 0.6);
         }
@@ -353,58 +531,58 @@
         }
 
         function getIconForType(typ) {
-            switch (String(typ || '').trim().toLowerCase()) {
-                case 'sm':
-                    return {
-                        className: 'icon-sm',
-                        symbol: '🏆'
-                    };
+    switch (String(typ || '').trim().toLowerCase()) {
+        case 'sm':
+            return {
+                className: 'icon-sm',
+                symbol: '<span class="symbol-medal">SM</span>'
+            };
 
-                case 'dm':
-                    return {
-                        className: 'icon-dm',
-                        symbol: '🥇'
-                    };
+        case 'dm':
+            return {
+                className: 'icon-dm',
+                symbol: '<span class="symbol-medal">DM</span>'
+            };
 
-               case 'km':
-                    return {
-                        className: 'icon-km',
-                        symbol: '🏅'
-                    };
+        case 'km':
+            return {
+                className: 'icon-km',
+                symbol: '<span class="symbol-medal">KM</span>'
+            };
 
-                case 'o-ringen':
-                    return {
-                        className: 'icon-oringen',
-                        symbol: '★'
-                    };
+        case 'o-ringen':
+            return {
+                className: 'icon-oringen',
+                symbol: '<span class="symbol-star">★</span>'
+            };
 
-                case 'träning':
-                case 'traning':
-                    return {
-                        className: 'icon-traning',
-                        symbol: '●'
-                    };
+        case 'träning':
+        case 'traning':
+            return {
+                className: 'icon-traning',
+                symbol: '<span class="symbol-flag"></span>'
+            };
 
-                case 'natt':
-                    return {
-                        className: 'icon-natt',
-                        symbol: '☾'
-                    };
+        case 'natt':
+            return {
+                className: 'icon-natt',
+                symbol: '<span class="symbol-moon"></span>'
+            };
 
-                case 'stafett':
-                    return {
-                        className: 'icon-stafett',
-                        symbol: '👥'
-                    };
+        case 'stafett':
+            return {
+                className: 'icon-stafett',
+                symbol: '<span class="symbol-relay"><i></i><i></i></span>'
+            };
 
-                default:
-                    return {
-                        className: 'icon-default',
-                        symbol: ''
-                    };
-            }
-        }
-
+        default:
+            return {
+                className: 'icon-default',
+                symbol: ''
+            };
+    }
+}
+        
         function createYearIcon(year, typ) {
             const icon = getIconForType(typ);
 
