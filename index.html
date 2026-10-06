@@ -147,6 +147,7 @@
         /* Olika symboler för olika tävlingstyper */
         .icon-sm,
         .icon-dm,
+        .icon-km,
         .icon-oringen,
         .icon-traning,
         .icon-natt,
@@ -166,6 +167,16 @@
         .icon-dm {
             background: #e67e22 !important;
             font-size: 11px;
+        }
+
+        .icon-km {
+            background: #8e44ad !important;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+           font-weight: bold;
         }
 
         .icon-oringen {
@@ -353,6 +364,12 @@
                     return {
                         className: 'icon-dm',
                         symbol: '🥇'
+                    };
+
+               case 'km':
+                    return {
+                        className: 'icon-km',
+                        symbol: '🏅'
                     };
 
                 case 'o-ringen':
