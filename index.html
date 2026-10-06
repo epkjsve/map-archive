@@ -4,16 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digitalt Kartarkiv</title>
-    
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-    
+
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100vh; width: 100%; }
-        
-        /* Knappar i övre högra hörnet */
+
         .top-action-buttons {
             position: absolute; top: 15px; right: 15px; z-index: 1001;
             display: flex; gap: 8px;
@@ -44,9 +43,9 @@
         .filter-group { display: flex; flex-direction: column; }
         .filter-group label { font-weight: bold; font-size: 13px; margin-bottom: 3px; }
 
-        #name-search, #year-filter, #organizer-filter { 
-            width: 100%; padding: 6px; border-radius: 4px; 
-            border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; 
+        #name-search, #year-filter, #organizer-filter {
+            width: 100%; padding: 6px; border-radius: 4px;
+            border: 1px solid #ccc; box-sizing: border-box; font-size: 13px;
         }
 
         .result-count {
@@ -76,7 +75,6 @@
         #stats-box ul { margin: 0; padding-left: 15px; }
         #stats-box li { margin-bottom: 4px; }
 
-        /* Kompakt och mobilanpassad koordinatruta */
         .admin-coord-display {
             position: fixed; bottom: 15px; left: 15px;
             background: rgba(255, 255, 255, 0.92); padding: 6px 10px; z-index: 1000;
@@ -100,7 +98,7 @@
         .ol-popup { min-width: 280px; }
         .ol-popup h3 { margin: 0 0 2px 0; color: #333; font-size: 18px; }
         .ol-popup p.meta { margin: 0 0 12px 0; font-size: 12px; color: #666; border-bottom: 1px solid #eee; padding-bottom: 6px; }
-        
+
         .btn-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
         .btn {
             display: block; text-align: center; padding: 10px;
@@ -137,62 +135,6 @@
             border: 1.5px solid #333; box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .icon-sm {
-    background: #f1c40f !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-}
-
-.icon-dm {
-    background: #e67e22 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-}
-
-.icon-oringen {
-    background: #ff6600 !important;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-}
-
-.icon-traning {
-    background: #27ae60 !important;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-}
-
-.icon-natt {
-    background: #34495e !important;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-}
-
-.icon-stafett {
-    background: #3498db !important;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-}
-
-.icon-default {
-    background: linear-gradient(135deg, #ffffff 50%, #ff6600 50%) !important;
-}
-
         .ol-icon-year {
             position: absolute; top: 23px; left: 50%;
             transform: translateX(-50%); background: white;
@@ -200,6 +142,54 @@
             padding: 1px 4px; font-size: 10px; font-weight: bold;
             color: #333; white-space: nowrap;
             box-shadow: 1px 1px 3px rgba(0,0,0,0.25); z-index: 1000;
+        }
+
+        /* Olika symboler för olika tävlingstyper */
+        .icon-sm,
+        .icon-dm,
+        .icon-oringen,
+        .icon-traning,
+        .icon-natt,
+        .icon-stafett {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .icon-sm {
+            background: #c9a227 !important;
+            font-size: 11px;
+        }
+
+        .icon-dm {
+            background: #e67e22 !important;
+            font-size: 11px;
+        }
+
+        .icon-oringen {
+            background: #ff6600 !important;
+            font-size: 14px;
+        }
+
+        .icon-traning {
+            background: #27ae60 !important;
+            font-size: 14px;
+        }
+
+        .icon-natt {
+            background: #34495e !important;
+            font-size: 14px;
+        }
+
+        .icon-stafett {
+            background: #3498db !important;
+            font-size: 11px;
+        }
+
+        .icon-default {
+            background: linear-gradient(135deg, #ffffff 50%, #ff6600 50%) !important;
         }
 
         .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
@@ -217,7 +207,6 @@
 </head>
 <body>
 
-    <!-- Knappar i övre högra hörnet -->
     <div class="top-action-buttons">
         <button id="gps-btn" class="top-btn" onclick="locateUser()">📍 Min position</button>
         <button id="toggle-filter-btn" class="top-btn" onclick="toggleFilterMenu()">🔍 Filtrera kartor</button>
@@ -240,7 +229,7 @@
                 <option value="all">Alla arrangörer</option>
             </select>
         </div>
-        
+
         <div class="result-count">
             <span>Visar <strong id="count-number">0</strong> kartor</span>
             <button class="inner-stats-btn" onclick="toggleStats()">📊 Visa statistik</button>
@@ -260,20 +249,20 @@
     </div>
 
     <div id="map"></div>
-    
+
     <div class="admin-coord-display" id="coords">
         Klicka på kartan för koordinater
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>    
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script>
         const csvBaseUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTiIvWU6vJ_oiLei4yVUVRjROhqhDOUVxE5H796BTNBHbRRXz6tgMtL777NatJMlHkyF1oXKknvMEDk/pub?output=csv';
         const csvUrl = csvBaseUrl + '&t=' + new Date().getTime();
 
         const map = L.map('map').setView([62.0, 15.0], 5);
-        
+
         const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '© OpenStreetMap, © CARTO'
         });
@@ -342,7 +331,7 @@
         function toggleFilterMenu() {
             const container = document.getElementById('filter-container');
             const btn = document.getElementById('toggle-filter-btn');
-            
+
             container.classList.toggle('filter-hidden');
             btn.innerHTML = container.classList.contains('filter-hidden') ? '🔍 Filtrera kartor' : '✕ Stäng filter';
         }
@@ -352,68 +341,67 @@
             statsBox.style.display = (statsBox.style.display === 'none') ? 'block' : 'none';
         }
 
+        function getIconForType(typ) {
+            switch (String(typ || '').trim().toLowerCase()) {
+                case 'sm':
+                    return {
+                        className: 'icon-sm',
+                        symbol: '🏆'
+                    };
+
+                case 'dm':
+                    return {
+                        className: 'icon-dm',
+                        symbol: '🥇'
+                    };
+
+                case 'o-ringen':
+                    return {
+                        className: 'icon-oringen',
+                        symbol: '★'
+                    };
+
+                case 'träning':
+                case 'traning':
+                    return {
+                        className: 'icon-traning',
+                        symbol: '●'
+                    };
+
+                case 'natt':
+                    return {
+                        className: 'icon-natt',
+                        symbol: '☾'
+                    };
+
+                case 'stafett':
+                    return {
+                        className: 'icon-stafett',
+                        symbol: '👥'
+                    };
+
+                default:
+                    return {
+                        className: 'icon-default',
+                        symbol: ''
+                    };
+            }
+        }
+
         function createYearIcon(year, typ) {
-             const icon = getIconForType(typ);
+            const icon = getIconForType(typ);
 
-             return L.divIcon({
-             className: 'ol-icon',
-              html: `
-                <div class="ol-icon-inner ${icon.className}">
-                    ${icon.symbol}
-                </div>
-                <div class="ol-icon-year">${year || ''}</div>
-            `,
-            iconSize: [20, 20],
-            iconAnchor: [10, 10]
-        });
-       }
+            return L.divIcon({
+                className: 'ol-icon',
+                html: `
+                    <div class="ol-icon-inner ${icon.className}">${icon.symbol}</div>
+                    <div class="ol-icon-year">${year || ''}</div>
+                `,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+        }
 
-function getIconForType(typ) {
-    switch (String(typ || '').trim().toLowerCase()) {
-        case 'sm':
-            return {
-                className: 'icon-sm',
-                symbol: '🏆'
-            };
-
-        case 'dm':
-            return {
-                className: 'icon-dm',
-                symbol: '🥇'
-            };
-
-        case 'o-ringen':
-            return {
-                className: 'icon-oringen',
-                symbol: '★'
-            };
-
-        case 'träning':
-            return {
-                className: 'icon-traning',
-                symbol: '●'
-            };
-
-        case 'natt':
-            return {
-                className: 'icon-natt',
-                symbol: '☾'
-            };
-
-        case 'stafett':
-            return {
-                className: 'icon-stafett',
-                symbol: '👥'
-            };
-
-        default:
-            return {
-                className: 'icon-default',
-                symbol: ''
-            };
-    }
-}
-        
         function getButtonHtml(url, label, activeClass) {
             const cleanUrl = url ? String(url).trim() : "";
             const hasValidUrl = cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://");
@@ -435,7 +423,7 @@ function getIconForType(typ) {
             if (!tidStr) return 0;
             const parts = String(tidStr).trim().split(':').map(p => parseInt(p, 10));
             if (parts.some(isNaN)) return 0;
-            
+
             if (parts.length === 3) {
                 return parts[0] * 3600 + parts[1] * 60 + parts[2];
             } else if (parts.length === 2) {
@@ -513,12 +501,15 @@ function getIconForType(typ) {
                         };
 
                         if (!isNaN(item.lat) && !isNaN(item.lng)) {
-                            const marker = L.marker([item.lat, item.lng], {icon: createYearIcon(item.ar, item.typ)
+                            const marker = L.marker([item.lat, item.lng], {
+                                icon: createYearIcon(item.ar, item.typ)
+                            });
+
                             const popupContent = `
                                 <div class="ol-popup">
                                     <h3>${item.namn}</h3>
                                     <p class="meta">
-                                        <strong>${item.ar || ''}</strong> | ${item.arrangor} | ${item.langd}m ${item.tid ? '| ' + item.tid : ''}
+                                        <strong>${item.ar || ''}</strong> | ${item.arrangor} | ${item.typ || 'Tävling'} | ${item.langd}m ${item.tid ? '| ' + item.tid : ''}
                                     </p>
                                     <div class="btn-group">
                                         ${getButtonHtml(item.pdf, 'Karta (PDF)', 'btn-pdf')}
@@ -528,7 +519,7 @@ function getIconForType(typ) {
                                     <div class="referat-box">${item.referat}</div>
                                 </div>
                             `;
-                            
+
                             marker.bindPopup(popupContent, { maxWidth: 350 });
                             marker.year = String(item.ar);
                             marker.arrangor = String(item.arrangor);
@@ -537,7 +528,7 @@ function getIconForType(typ) {
                             marker.langd = item.langd;
                             marker.tid = item.tid;
                             marker.tidSekunder = item.tidSekunder;
-                            
+
                             item.marker = marker;
                             allItemsList.push(item);
                         }
@@ -641,18 +632,18 @@ function getIconForType(typ) {
             const selectedYear = yearSelect ? yearSelect.value : "all";
             const selectedOrganizer = orgSelect ? orgSelect.value : "all";
             const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
-            
+
             markersGroup.clearLayers();
             let visibleCount = 0;
             let totalMeters = 0;
             let totalSeconds = 0;
-            
+
             let maxDistItem = null;
             let maxTimeItem = null;
 
             const visibleYears = [];
             const visibleOrgs = new Set();
-            
+
             allItemsList.forEach(item => {
                 const matchesYear = (selectedYear === "all" || String(item.ar) === selectedYear);
                 const matchesOrganizer = (selectedOrganizer === "all" || item.arrangor === selectedOrganizer);
@@ -689,7 +680,7 @@ function getIconForType(typ) {
 
             const statTime = document.getElementById('stat-total-time');
             if (statTime) statTime.textContent = formatSecondsToTime(totalSeconds);
-            
+
             const statMaxDist = document.getElementById('stat-max-dist');
             if (statMaxDist) {
                 if (maxDistItem) {
@@ -711,7 +702,7 @@ function getIconForType(typ) {
 
             const statOrgs = document.getElementById('stat-orgs');
             if (statOrgs) statOrgs.textContent = visibleOrgs.size;
-            
+
             const statYears = document.getElementById('stat-years');
             if (statYears) {
                 if (visibleYears.length > 0) {
