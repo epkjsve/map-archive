@@ -43,20 +43,15 @@
         .filter-group { display: flex; flex-direction: column; }
         .filter-group label { font-weight: bold; font-size: 13px; margin-bottom: 3px; }
 
-        #name-search, #year-filter, #organizer-filter {
+        #name-search, #year-filter, #organizer-filter, #type-filter {
             width: 100%; padding: 6px; border-radius: 4px;
             border: 1px solid #ccc; box-sizing: border-box; font-size: 13px;
         }
 
         .result-count {
-            font-size: 12px;
-            color: #555;
-            font-weight: bold;
-            padding-top: 6px;
-            border-top: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-size: 12px; color: #555; font-weight: bold;
+            padding-top: 6px; border-top: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
         .inner-stats-btn {
@@ -80,8 +75,7 @@
             background: rgba(255, 255, 255, 0.92); padding: 6px 10px; z-index: 1000;
             border: 1.5px solid #ff6600; border-radius: 6px; font-size: 11px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15); max-width: 240px;
-            backdrop-filter: blur(2px);
-            color: #333;
+            backdrop-filter: blur(2px); color: #333;
         }
 
         .coord-row {
@@ -111,12 +105,9 @@
         .btn:hover { filter: brightness(90%); }
 
         .btn-disabled {
-            background-color: #bdc3c7 !important;
-            color: #7f8c8d !important;
-            cursor: not-allowed !important;
-            pointer-events: none !important;
-            user-select: none !important;
-            box-shadow: none !important;
+            background-color: #bdc3c7 !important; color: #7f8c8d !important;
+            cursor: not-allowed !important; pointer-events: none !important;
+            user-select: none !important; box-shadow: none !important;
         }
 
         .referat-box {
@@ -125,15 +116,11 @@
             font-size: 13px; line-height: 1.5; color: #444; white-space: pre-wrap;
         }
 
-        .ol-icon {
-            background: transparent !important; border: none !important; overflow: visible !important;
-        }
+        .ol-icon { background: transparent !important; border: none !important; overflow: visible !important; }
 
         .ol-icon-inner {
             width: 20px; height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             background: linear-gradient(135deg, #ffffff 50%, #ff6600 50%);
             border: 1.5px solid #333; box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
@@ -148,299 +135,84 @@
         }
 
         /* Olika symboler för olika tävlingstyper */
-.icon-sm,
-.icon-dm,
-.icon-km,
-.icon-oringen,
-.icon-traning,
-.icon-natt,
-.icon-stafett {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    border-radius: 50%;
-    position: relative;
-    box-sizing: border-box;
-    border: 1.5px solid rgba(0, 0, 0, 0.55);
-    box-shadow:
-        1px 2px 4px rgba(0, 0, 0, 0.35),
-        inset 0 1px 1px rgba(255, 255, 255, 0.35);
-}
+        .icon-sm, .icon-dm, .icon-km, .icon-oringen, .icon-traning, .icon-natt, .icon-stafett {
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; border-radius: 50%;
+            position: relative; box-sizing: border-box;
+            border: 1.5px solid rgba(0, 0, 0, 0.55);
+            box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+        }
 
+        .icon-sm { background: linear-gradient(145deg, #f5d76e, #c9a227) !important; }
+        .icon-dm { background: linear-gradient(145deg, #f3a85b, #e67e22) !important; }
+        .icon-km { background: linear-gradient(145deg, #b276d2, #8e44ad) !important; }
 
-/* =========================
-   SM
-   ========================= */
+        .symbol-medal { font-size: 7px; line-height: 1; letter-spacing: -0.3px; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45); }
 
-.icon-sm {
-    background: linear-gradient(
-        145deg,
-        #f5d76e,
-        #c9a227
-    ) !important;
-}
+        .icon-oringen { background: linear-gradient(145deg, #ff914d, #ff6600) !important; }
+        .symbol-star { font-size: 15px; line-height: 1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
 
+        .icon-traning { background: linear-gradient(145deg, #4dcc7a, #27ae60) !important; }
 
-/* =========================
-   DM
-   ========================= */
+        /* Orienteringsflagga */
+        .symbol-flag { position: relative; width: 12px; height: 12px; }
+        .symbol-flag::before {
+            content: ""; position: absolute; left: 2px; top: 1px;
+            width: 2px; height: 10px; background: white; border-radius: 1px;
+        }
+        .symbol-flag::after {
+            content: ""; position: absolute; left: 4px; top: 1px;
+            width: 7px; height: 5px; background: white;
+            clip-path: polygon(0 0, 100% 20%, 70% 50%, 100% 80%, 0 100%);
+        }
 
-.icon-dm {
-    background: linear-gradient(
-        145deg,
-        #f3a85b,
-        #e67e22
-    ) !important;
-}
+        .icon-natt { background: linear-gradient(145deg, #536b82, #34495e) !important; }
 
+        /* Månskära */
+        .symbol-moon {
+            width: 11px; height: 11px; border-radius: 50%;
+            background: white; position: relative; display: block;
+        }
+        .symbol-moon::after {
+            content: ""; position: absolute; width: 11px; height: 11px;
+            border-radius: 50%; background: #34495e; left: 4px; top: -2px;
+        }
 
-/* =========================
-   KM
-   ========================= */
+        .icon-stafett { background: linear-gradient(145deg, #55a9df, #3498db) !important; }
 
-.icon-km {
-    background: linear-gradient(
-        145deg,
-        #b276d2,
-        #8e44ad
-    ) !important;
-}
+        /* Två "löpare" */
+        .symbol-relay { display: flex; align-items: center; justify-content: center; gap: 2px; }
+        .symbol-relay i { display: block; width: 5px; height: 5px; background: white; border-radius: 50%; position: relative; }
+        .symbol-relay i::after {
+            content: ""; position: absolute; width: 7px; height: 4px;
+            background: white; border-radius: 4px 4px 2px 2px; left: -1px; top: 5px;
+        }
 
+        /* Standard / Tävling (vit/orange skärm) */
+        .icon-default { background: linear-gradient(135deg, #ffffff 50%, #ff6600 50%) !important; }
 
-/* =========================
-   Medaljsymbol
-   ========================= */
+        /* Egen / okänd typ */
+        .icon-custom {
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; border-radius: 50%;
+            position: relative; box-sizing: border-box;
+            border: 1.5px solid rgba(0, 0, 0, 0.55);
+            background: linear-gradient(145deg, #95a5a6, #7f8c8d) !important;
+        }
 
-.symbol-medal {
-    font-size: 7px;
-    line-height: 1;
-    letter-spacing: -0.3px;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
-}
+        /* Flera typer på samma aktivitet (t.ex. "SM, Natt") */
+        .ol-icon-combo {
+            display: flex; align-items: center; justify-content: center;
+            gap: 2px; width: 100%; height: 100%;
+        }
 
+        .symbol-short {
+            font-size: 6px; line-height: 1; letter-spacing: -0.2px;
+            color: #ffffff; font-weight: bold; white-space: nowrap;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+        }
 
-/* =========================
-   O-Ringen
-   ========================= */
-
-.icon-oringen {
-    background: linear-gradient(
-        145deg,
-        #ff914d,
-        #ff6600
-    ) !important;
-}
-
-.symbol-star {
-    font-size: 15px;
-    line-height: 1;
-    text-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.45);
-}
-
-
-/* =========================
-   Träning
-   ========================= */
-
-.icon-traning {
-    background: linear-gradient(
-        145deg,
-        #4dcc7a,
-        #27ae60
-    ) !important;
-}
-
-
-/* Orienteringsflagga */
-.symbol-flag {
-    position: relative;
-    width: 12px;
-    height: 12px;
-}
-
-
-/* Stång */
-.symbol-flag::before {
-    content: "";
-    position: absolute;
-    left: 2px;
-    top: 1px;
-    width: 2px;
-    height: 10px;
-    background: white;
-    border-radius: 1px;
-}
-
-
-/* Flagga */
-.symbol-flag::after {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 1px;
-    width: 7px;
-    height: 5px;
-    background: white;
-    clip-path: polygon(
-        0 0,
-        100% 20%,
-        70% 50%,
-        100% 80%,
-        0 100%
-    );
-}
-
-
-/* =========================
-   Natt
-   ========================= */
-
-.icon-natt {
-    background: linear-gradient(
-        145deg,
-        #536b82,
-        #34495e
-    ) !important;
-}
-
-
-/* Månskära */
-.symbol-moon {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background: white;
-    position: relative;
-    display: block;
-}
-
-.symbol-moon::after {
-    content: "";
-    position: absolute;
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background: #34495e;
-    left: 4px;
-    top: -2px;
-}
-
-
-/* =========================
-   Stafett
-   ========================= */
-
-.icon-stafett {
-    background: linear-gradient(
-        145deg,
-        #55a9df,
-        #3498db
-    ) !important;
-}
-
-
-/* Två "löpare" */
-.symbol-relay {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-}
-
-.symbol-relay i {
-    display: block;
-    width: 5px;
-    height: 5px;
-    background: white;
-    border-radius: 50%;
-    position: relative;
-}
-
-
-/* Kropp */
-.symbol-relay i::after {
-    content: "";
-    position: absolute;
-    width: 7px;
-    height: 4px;
-    background: white;
-    border-radius: 4px 4px 2px 2px;
-    left: -1px;
-    top: 5px;
-}
-
-
-/* =========================
-   Standard
-   ========================= */
-
-.icon-default {
-    background: linear-gradient(
-        135deg,
-        #ffffff 50%,
-        #ff6600 50%
-    ) !important;
-}
-
-
-/* =========================
-   Tävling (generisk)
-   ========================= */
-
-.icon-tavling {
-    background: linear-gradient(
-        145deg,
-        #7f8c8d,
-        #566573
-    ) !important;
-}
-
-
-/* =========================
-   Egen / okänd typ
-   ========================= */
-
-.icon-custom {
-    background: linear-gradient(
-        145deg,
-        #95a5a6,
-        #7f8c8d
-    ) !important;
-}
-
-
-/* =========================
-   Flera typer på samma aktivitet
-   (t.ex. "SM, Natt" -> två symboler sida vid sida)
-   ========================= */
-
-.ol-icon-combo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    width: 100%;
-    height: 100%;
-}
-
-.symbol-short {
-    font-size: 6px;
-    line-height: 1;
-    letter-spacing: -0.2px;
-    color: #ffffff;
-    font-weight: bold;
-    white-space: nowrap;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-}
-
-/* Mörk text när cirkeln är ljus (Tävling = vit/orange skärm) */
-.symbol-short-dark {
-    color: #333333 !important;
-    text-shadow: none !important;
-}
+        .symbol-short-dark { color: #333333 !important; text-shadow: none !important; }
 
         .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
             background-color: rgba(255, 102, 0, 0.6);
@@ -465,18 +237,24 @@
     <div id="filter-container" class="filter-hidden">
         <div class="filter-group">
             <label for="name-search">Sök tävling:</label>
-            <input type="text" id="name-search" placeholder="T.ex. O-Ringen..." oninput="onFilterChange('search')">
+            <input type="text" id="name-search" placeholder="T.ex. O-Ringen..." oninput="onFilterChange()">
         </div>
         <div class="filter-group">
             <label for="year-filter">Välj år:</label>
-            <select id="year-filter" onchange="onFilterChange('year')">
+            <select id="year-filter" onchange="onFilterChange()">
                 <option value="all">Alla år</option>
             </select>
         </div>
         <div class="filter-group">
             <label for="organizer-filter">Välj arrangör:</label>
-            <select id="organizer-filter" onchange="onFilterChange('organizer')">
+            <select id="organizer-filter" onchange="onFilterChange()">
                 <option value="all">Alla arrangörer</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="type-filter">Välj typ:</label>
+            <select id="type-filter" onchange="onFilterChange()">
+                <option value="all">Alla typer</option>
             </select>
         </div>
 
@@ -612,7 +390,7 @@
             traning: { className: 'icon-traning', symbol: '<span class="symbol-flag"></span>',     short: 'TRÄN', label: 'Träning' },
             natt:    { className: 'icon-natt',    symbol: '<span class="symbol-moon"></span>',     short: 'NATT', label: 'Natt' },
             stafett: { className: 'icon-stafett', symbol: '<span class="symbol-relay"><i></i><i></i></span>', short: 'STAF', label: 'Stafett' },
-            /* Tävling = den gamla vita/orangea skärmen (icon-default) */
+            /* Tävling = den vita/orangea skärmen (icon-default) */
             tavling: { className: 'icon-default', symbol: '',                                      short: 'TÄVL', label: 'Tävling' }
         };
 
@@ -686,7 +464,7 @@
             const types = Array.isArray(typ) ? typ : parseTypes(typ);
             const yearLabel = `<div class="ol-icon-year">${year || ''}</div>`;
 
-            /* En enda typ -> vanlig symbol, precis som förut */
+            /* En enda typ -> vanlig symbol */
             if (types.length <= 1) {
                 const def = types[0] || { className: 'icon-default', symbol: '' };
 
@@ -871,93 +649,74 @@
             });
         }
 
-        function initFilterOptions() {
-            const yearSelect = document.getElementById('year-filter');
-            const orgSelect = document.getElementById('organizer-filter');
+        /* --- Rullistor (år, arrangör, typ) som påverkar varandra ---
+           En aktivitet med flera typer (t.ex. "SM, Natt") matchar
+           filtret om NÅGON av dess typer är vald. */
+        function fillSelect(el, allLabel, values, selected, labelFn = v => v) {
+            el.innerHTML = '';
+            const all = document.createElement('option');
+            all.value = 'all';
+            all.textContent = allLabel;
+            el.appendChild(all);
 
-            if (!yearSelect || !orgSelect) return;
-
-            const allYears = new Set();
-            const allOrgs = new Set();
-
-            allItemsList.forEach(item => {
-                if (item.ar && !isNaN(item.ar)) allYears.add(item.ar);
-                if (item.arrangor) allOrgs.add(item.arrangor);
-            });
-
-            yearSelect.innerHTML = '<option value="all">Alla år</option>';
-            Array.from(allYears).sort((a, b) => b - a).forEach(year => {
+            values.forEach(v => {
                 const opt = document.createElement('option');
-                opt.value = String(year);
-                opt.textContent = year;
-                yearSelect.appendChild(opt);
-            });
-
-            orgSelect.innerHTML = '<option value="all">Alla arrangörer</option>';
-            Array.from(allOrgs).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
-                const opt = document.createElement('option');
-                opt.value = org;
-                opt.textContent = org;
-                orgSelect.appendChild(opt);
+                opt.value = String(v);
+                opt.textContent = labelFn(v);
+                if (String(v) === String(selected)) opt.selected = true;
+                el.appendChild(opt);
             });
         }
 
-        function updateDropdowns(source) {
-            const yearSelect = document.getElementById('year-filter');
-            const orgSelect = document.getElementById('organizer-filter');
+        const hasType = (item, key) => item.typer.some(t => t.key === key);
 
-            if (!yearSelect || !orgSelect) return;
+        function updateDropdowns() {
+            const yearEl = document.getElementById('year-filter');
+            const orgEl = document.getElementById('organizer-filter');
+            const typeEl = document.getElementById('type-filter');
+            if (!yearEl || !orgEl || !typeEl) return;
 
-            const selectedYear = yearSelect.value;
-            const selectedOrg = orgSelect.value;
+            const sy = yearEl.value, so = orgEl.value, st = typeEl.value;
 
-            if (source === 'year') {
-                const availableOrgs = new Set();
-                allItemsList.forEach(item => {
-                    if (selectedYear === "all" || String(item.ar) === selectedYear) {
-                        if (item.arrangor) availableOrgs.add(item.arrangor);
-                    }
-                });
+            const okY = i => sy === 'all' || String(i.ar) === sy;
+            const okO = i => so === 'all' || i.arrangor === so;
+            const okT = i => st === 'all' || hasType(i, st);
 
-                orgSelect.innerHTML = '<option value="all">Alla arrangörer</option>';
-                Array.from(availableOrgs).sort((a, b) => a.localeCompare(b, 'sv')).forEach(org => {
-                    const opt = document.createElement('option');
-                    opt.value = org;
-                    opt.textContent = org;
-                    if (org === selectedOrg) opt.selected = true;
-                    orgSelect.appendChild(opt);
-                });
-            } else if (source === 'organizer') {
-                const availableYears = new Set();
-                allItemsList.forEach(item => {
-                    if (selectedOrg === "all" || item.arrangor === selectedOrg) {
-                        if (item.ar && !isNaN(item.ar)) availableYears.add(item.ar);
-                    }
-                });
+            const years = new Set(), orgs = new Set();
+            const typeLabels = new Map(); /* nyckel -> visningsnamn */
 
-                yearSelect.innerHTML = '<option value="all">Alla år</option>';
-                Array.from(availableYears).sort((a, b) => b - a).forEach(year => {
-                    const opt = document.createElement('option');
-                    opt.value = String(year);
-                    opt.textContent = year;
-                    if (String(year) === selectedYear) opt.selected = true;
-                    yearSelect.appendChild(opt);
-                });
-            }
+            allItemsList.forEach(i => {
+                if (okO(i) && okT(i) && i.ar && !isNaN(i.ar)) years.add(i.ar);
+                if (okY(i) && okT(i) && i.arrangor) orgs.add(i.arrangor);
+                if (okY(i) && okO(i)) {
+                    i.typer.forEach(t => typeLabels.set(t.key, t.label));
+                }
+            });
+
+            const typeKeys = [...typeLabels.keys()]
+                .sort((a, b) => typeLabels.get(a).localeCompare(typeLabels.get(b), 'sv'));
+
+            fillSelect(yearEl, 'Alla år', [...years].sort((a, b) => b - a), sy);
+            fillSelect(orgEl, 'Alla arrangörer', [...orgs].sort((a, b) => a.localeCompare(b, 'sv')), so);
+            fillSelect(typeEl, 'Alla typer', typeKeys, st, k => typeLabels.get(k));
         }
 
-        function onFilterChange(source) {
-            updateDropdowns(source);
+        function initFilterOptions() { updateDropdowns(); }
+
+        function onFilterChange() {
+            updateDropdowns();
             filterMarkers();
         }
 
         function filterMarkers(autoZoom = true) {
             const yearSelect = document.getElementById('year-filter');
             const orgSelect = document.getElementById('organizer-filter');
+            const typeSelect = document.getElementById('type-filter');
             const searchInput = document.getElementById('name-search');
 
             const selectedYear = yearSelect ? yearSelect.value : "all";
             const selectedOrganizer = orgSelect ? orgSelect.value : "all";
+            const selectedType = typeSelect ? typeSelect.value : "all";
             const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
             markersGroup.clearLayers();
@@ -974,9 +733,10 @@
             allItemsList.forEach(item => {
                 const matchesYear = (selectedYear === "all" || String(item.ar) === selectedYear);
                 const matchesOrganizer = (selectedOrganizer === "all" || item.arrangor === selectedOrganizer);
+                const matchesType = (selectedType === "all" || hasType(item, selectedType));
                 const matchesSearch = (searchText === "" || item.namn.toLowerCase().includes(searchText));
 
-                if (matchesYear && matchesOrganizer && matchesSearch) {
+                if (matchesYear && matchesOrganizer && matchesType && matchesSearch) {
                     markersGroup.addLayer(item.marker);
                     visibleCount++;
 
@@ -1102,9 +862,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
