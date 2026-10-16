@@ -436,6 +436,12 @@
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
 }
 
+/* Mörk text när cirkeln är ljus (Tävling = vit/orange skärm) */
+.symbol-short-dark {
+    color: #333333 !important;
+    text-shadow: none !important;
+}
+
         .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
             background-color: rgba(255, 102, 0, 0.6);
         }
@@ -606,7 +612,8 @@
             traning: { className: 'icon-traning', symbol: '<span class="symbol-flag"></span>',     short: 'TRÄN', label: 'Träning' },
             natt:    { className: 'icon-natt',    symbol: '<span class="symbol-moon"></span>',     short: 'NATT', label: 'Natt' },
             stafett: { className: 'icon-stafett', symbol: '<span class="symbol-relay"><i></i><i></i></span>', short: 'STAF', label: 'Stafett' },
-            tavling: { className: 'icon-tavling', symbol: '',                                      short: 'TÄVL', label: 'Tävling' }
+            /* Tävling = den gamla vita/orangea skärmen (icon-default) */
+            tavling: { className: 'icon-default', symbol: '',                                      short: 'TÄVL', label: 'Tävling' }
         };
 
         const TYPE_ALIASES = {
@@ -697,7 +704,12 @@
             /* Flera typer -> en liten rad av symboler, en per typ */
             const shown = types.slice(0, MAX_COMBO_ICONS);
             const circles = shown
-                .map(def => `<div class="ol-icon-inner ${def.className}"><span class="symbol-short">${def.short}</span></div>`)
+                .map(def => {
+                    const textClass = (def.className === 'icon-default')
+                        ? 'symbol-short symbol-short-dark'
+                        : 'symbol-short';
+                    return `<div class="ol-icon-inner ${def.className}"><span class="${textClass}">${def.short}</span></div>`;
+                })
                 .join('');
 
             const iconWidth = shown.length * 20 + (shown.length - 1) * 2;
@@ -1090,4 +1102,9 @@
     </script>
 </body>
 </html>
+
+
+
+
+
 
