@@ -131,6 +131,9 @@
 
         .ol-icon-inner {
             width: 20px; height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: linear-gradient(135deg, #ffffff 50%, #ff6600 50%);
             border: 1.5px solid #333; box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
@@ -381,6 +384,58 @@
         #ff6600 50%
     ) !important;
 }
+
+
+/* =========================
+   Tävling (generisk)
+   ========================= */
+
+.icon-tavling {
+    background: linear-gradient(
+        145deg,
+        #7f8c8d,
+        #566573
+    ) !important;
+}
+
+
+/* =========================
+   Egen / okänd typ
+   ========================= */
+
+.icon-custom {
+    background: linear-gradient(
+        145deg,
+        #95a5a6,
+        #7f8c8d
+    ) !important;
+}
+
+
+/* =========================
+   Flera typer på samma aktivitet
+   (t.ex. "SM, Natt" -> två symboler sida vid sida)
+   ========================= */
+
+.ol-icon-combo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+}
+
+.symbol-short {
+    font-size: 6px;
+    line-height: 1;
+    letter-spacing: -0.2px;
+    color: #ffffff;
+    font-weight: bold;
+    white-space: nowrap;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
         .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large {
             background-color: rgba(255, 102, 0, 0.6);
         }
@@ -530,70 +585,131 @@
             statsBox.style.display = (statsBox.style.display === 'none') ? 'block' : 'none';
         }
 
-        function getIconForType(typ) {
-    switch (String(typ || '').trim().toLowerCase()) {
-        case 'sm':
-            return {
-                className: 'icon-sm',
-                symbol: '<span class="symbol-medal">SM</span>'
-            };
+        /* =========================================================
+           TYPER
+           En aktivitet kan ha FLERA typer samtidigt.
+           Skriv t.ex. så här i kolumnen "Typ":
+               Natt
+               SM, Natt
+               Tävling / Natt
+               Natt och stafett
+           Separatorer som stöds: , ; / | & + eller ordet "och".
+           ========================================================= */
 
-        case 'dm':
-            return {
-                className: 'icon-dm',
-                symbol: '<span class="symbol-medal">DM</span>'
-            };
+        const TYPE_SEPARATOR_REGEX = /\s*[,;|&+\/]+\s*|\s+och\s+/i;
 
-        case 'km':
-            return {
-                className: 'icon-km',
-                symbol: '<span class="symbol-medal">KM</span>'
-            };
+        const TYPE_DEFS = {
+            sm:      { className: 'icon-sm',      symbol: '<span class="symbol-medal">SM</span>', short: 'SM',   label: 'SM' },
+            dm:      { className: 'icon-dm',      symbol: '<span class="symbol-medal">DM</span>', short: 'DM',   label: 'DM' },
+            km:      { className: 'icon-km',      symbol: '<span class="symbol-medal">KM</span>', short: 'KM',   label: 'KM' },
+            oringen: { className: 'icon-oringen', symbol: '<span class="symbol-star">★</span>',    short: 'O-R',  label: 'O-Ringen' },
+            traning: { className: 'icon-traning', symbol: '<span class="symbol-flag"></span>',     short: 'TRÄN', label: 'Träning' },
+            natt:    { className: 'icon-natt',    symbol: '<span class="symbol-moon"></span>',     short: 'NATT', label: 'Natt' },
+            stafett: { className: 'icon-stafett', symbol: '<span class="symbol-relay"><i></i><i></i></span>', short: 'STAF', label: 'Stafett' },
+            tavling: { className: 'icon-tavling', symbol: '',                                      short: 'TÄVL', label: 'Tävling' }
+        };
 
-        case 'o-ringen':
-            return {
-                className: 'icon-oringen',
-                symbol: '<span class="symbol-star">★</span>'
-            };
+        const TYPE_ALIASES = {
+            'sm': 'sm',
+            'dm': 'dm',
+            'km': 'km',
+            'o-ringen': 'oringen',
+            'o ringen': 'oringen',
+            'oringen': 'oringen',
+            'träning': 'traning',
+            'traning': 'traning',
+            'natt': 'natt',
+            'nattävling': 'natt',
+            'nattavling': 'natt',
+            'stafett': 'stafett',
+            'tävling': 'tavling',
+            'tavling': 'tavling'
+        };
 
-        case 'träning':
-        case 'traning':
-            return {
-                className: 'icon-traning',
-                symbol: '<span class="symbol-flag"></span>'
-            };
+        function normalizeTypeToken(token) {
+            const t = String(token || '').trim().toLowerCase().replace(/\s+/g, ' ');
+            if (TYPE_ALIASES[t]) return TYPE_ALIASES[t];
 
-        case 'natt':
-            return {
-                className: 'icon-natt',
-                symbol: '<span class="symbol-moon"></span>'
-            };
+            const stripped = t.replace(/å/g, 'a').replace(/ä/g, 'a').replace(/ö/g, 'o');
+            if (TYPE_ALIASES[stripped]) return TYPE_ALIASES[stripped];
 
-        case 'stafett':
-            return {
-                className: 'icon-stafett',
-                symbol: '<span class="symbol-relay"><i></i><i></i></span>'
-            };
+            return stripped;
+        }
 
-        default:
-            return {
-                className: 'icon-default',
-                symbol: ''
-            };
-    }
-}
-        
+        function parseTypes(typ) {
+            const raw = String(typ || '').trim();
+            if (!raw) return [];
+
+            const tokens = raw.split(TYPE_SEPARATOR_REGEX)
+                .map(t => t.trim())
+                .filter(Boolean);
+
+            const seen = new Set();
+            const types = [];
+
+            tokens.forEach(token => {
+                const key = normalizeTypeToken(token);
+
+                const def = TYPE_DEFS[key]
+                    ? Object.assign({ key: key }, TYPE_DEFS[key])
+                    : {
+                        key: 'egen-' + key,
+                        className: 'icon-custom',
+                        symbol: '',
+                        short: String(token).trim().toUpperCase().slice(0, 4),
+                        label: String(token).trim()
+                    };
+
+                if (seen.has(def.key)) return;
+                seen.add(def.key);
+                types.push(def);
+            });
+
+            return types;
+        }
+
+        function typesToLabel(types) {
+            if (!types || types.length === 0) return 'Tävling';
+            return types.map(t => t.label).join(' + ');
+        }
+
+        const MAX_COMBO_ICONS = 3;
+
         function createYearIcon(year, typ) {
-            const icon = getIconForType(typ);
+            const types = Array.isArray(typ) ? typ : parseTypes(typ);
+            const yearLabel = `<div class="ol-icon-year">${year || ''}</div>`;
+
+            /* En enda typ -> vanlig symbol, precis som förut */
+            if (types.length <= 1) {
+                const def = types[0] || { className: 'icon-default', symbol: '' };
+
+                return L.divIcon({
+                    className: 'ol-icon',
+                    html: `
+                        <div class="ol-icon-inner ${def.className}">${def.symbol}</div>
+                        ${yearLabel}
+                    `,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+            }
+
+            /* Flera typer -> en liten rad av symboler, en per typ */
+            const shown = types.slice(0, MAX_COMBO_ICONS);
+            const circles = shown
+                .map(def => `<div class="ol-icon-inner ${def.className}"><span class="symbol-short">${def.short}</span></div>`)
+                .join('');
+
+            const iconWidth = shown.length * 20 + (shown.length - 1) * 2;
 
             return L.divIcon({
                 className: 'ol-icon',
                 html: `
-                    <div class="ol-icon-inner ${icon.className}">${icon.symbol}</div>
-                    <div class="ol-icon-year">${year || ''}</div>
+                    <div class="ol-icon-combo">${circles}</div>
+                    ${yearLabel}
                 `,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+                iconSize: [iconWidth, 20],
+                iconAnchor: [iconWidth / 2, 10]
             });
         }
 
@@ -679,11 +795,15 @@
                         const splitVal = getValueFromRow(row, ["Splits_URL", "splits_url", "Splits"]);
                         const routeVal = getValueFromRow(row, ["Route_URL", "route_url", "Livelox"]);
 
+                        const typer = parseTypes(typVal);
+
                         const item = {
                             namn: namnVal || "",
                             ar: parseInt(arVal, 10),
                             arrangor: String(orgVal || "").trim(),
                             typ: String(typVal || "").trim(),
+                            typer: typer,
+                            typText: typesToLabel(typer),
                             langd: parseCoord(langdVal) || 0,
                             tid: tidVal || "",
                             tidSekunder: parseTimeToSeconds(tidVal),
@@ -697,14 +817,14 @@
 
                         if (!isNaN(item.lat) && !isNaN(item.lng)) {
                             const marker = L.marker([item.lat, item.lng], {
-                                icon: createYearIcon(item.ar, item.typ)
+                                icon: createYearIcon(item.ar, item.typer)
                             });
 
                             const popupContent = `
                                 <div class="ol-popup">
                                     <h3>${item.namn}</h3>
                                     <p class="meta">
-                                        <strong>${item.ar || ''}</strong> | ${item.arrangor} | ${item.typ || 'Tävling'} | ${item.langd}m ${item.tid ? '| ' + item.tid : ''}
+                                        <strong>${item.ar || ''}</strong> | ${item.arrangor} | ${item.typText} | ${item.langd}m ${item.tid ? '| ' + item.tid : ''}
                                     </p>
                                     <div class="btn-group">
                                         ${getButtonHtml(item.pdf, 'Karta (PDF)', 'btn-pdf')}
@@ -970,3 +1090,4 @@
     </script>
 </body>
 </html>
+
